@@ -1,0 +1,5 @@
+[core]
+addr = ":5050"
+
+[belt]
+size = 2

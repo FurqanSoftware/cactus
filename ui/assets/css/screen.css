@@ -1,0 +1,287 @@
+/* Copyright 2014 The Cactus Authors. All rights reserved. */
+
+@font-face {
+    font-family: 'Maven Pro';
+    src: url('../font/mavenpro-regular.eot');
+    src: url('../font/mavenpro-regular.eot?#iefix') format('embedded-opentype'),
+         url('../font/mavenpro-regular.woff') format('woff'),
+         url('../font/mavenpro-regular.ttf') format('truetype'),
+         url('../font/mavenpro-regular.svg#mavenproregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Maven Pro';
+    src: url('../font/mavenpro-bold.eot');
+    src: url('../font/mavenpro-bold.eot?#iefix') format('embedded-opentype'),
+         url('../font/mavenpro-bold.woff') format('woff'),
+         url('../font/mavenpro-bold.ttf') format('truetype'),
+         url('../font/mavenpro-bold.svg#mavenprobold') format('svg');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Ubuntu Mono';
+    src: url('../font/ubuntumono-r.eot');
+    src: url('../font/ubuntumono-r.eot?#iefix') format('embedded-opentype'),
+         url('../font/ubuntumono-r.woff') format('woff'),
+         url('../font/ubuntumono-r.ttf') format('truetype'),
+         url('../font/ubuntumono-r.svg#ubuntu_monoregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
+
+html {
+    -webkit-font-smoothing: subpixel-antialiased;
+}
+
+.btn,
+.dropdown-menu,
+.form-control,
+.label,
+.modal-content,
+.nav-pills > li > a,
+.navbar,
+pre,
+.panel,
+.panel-group .panel,
+.popover {
+    border-radius: 1px;
+}
+.panel > .list-group:first-child .list-group-item:first-child {
+    border-radius: 1px 1px 0 0;
+}
+.panel > .list-group:last-child .list-group-item:last-child {
+    border-radius: 0 0 1px 1px;
+}
+
+.list-group-item {
+    border-color: #eee;
+}
+.list-group-item .list-group-item-heading:last-child {
+    margin: 0;
+}
+
+
+body,
+h1,
+.h1,
+h2,
+.h2,
+h3,
+.h3,
+h4,
+.h4,
+h5,
+.h5,
+h6,
+.h6 {
+    color: #222;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    padding-top: 12px;
+    font-family: 'Maven Pro';
+}
+
+#loading {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2047;
+    background: #fff;
+}
+#loading .inner {
+    position: absolute;
+    top: 40%;
+    width: 100%;
+    text-align: center;
+}
+
+header {
+    margin: 8px 0;
+}
+header h1 a,
+header h1 a:active,
+header h1 a:hover {
+    color: #222;
+    text-decoration: none;
+}
+
+#flash {
+    position: fixed;
+    top: 48px;
+    left: 50%;
+}
+
+footer {
+    padding: 8px 0 8px;
+}
+
+.table > tbody > tr > td,
+.table > tfoot > tr > td,
+.table > thead > tr > th {
+    border: none;
+}
+
+.table-standing > tbody > tr > td:nth-child(n+3),
+.table-standing > thead > tr > th:nth-child(n+3) {
+    text-align: center;
+}
+
+.btn {
+    border-width: 1px !important;
+    text-transform: none;
+    font-weight: normal;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.btn.btn-default {
+    border-color: #eee;
+}
+.btn-default.active, .btn-default:active, .btn-default:focus, .btn-default:hover, .open>.dropdown-toggle.btn-default {
+    border-color: #adadad;
+}
+
+.navbar {
+    border-width: 1px;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+.navbar .navbar-header .navbar-brand {
+    position: relative;
+}
+.navbar-nav.navbar-right:last-child {
+    margin-right: 0;
+}
+
+.dropdown-menu {
+    border: 1px solid #eee;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+.form-control {
+    border: 1px solid #eee;
+}
+
+.panel-default {
+    border: 1px solid #eee;
+}
+.panel-default > .panel-heading + .panel-collapse > .panel-body,
+.panel-group .panel-heading + .panel-collapse > .panel-body {
+    border: none;
+}
+.panel.panel-default > table thead tr:first-child {
+    border-top: none;
+}
+.panel .panel-body h1:nth-child(n-1),
+.panel .panel-body .h1:nth-child(n-1),
+.panel .panel-body h2:nth-child(n-1),
+.panel .panel-body .h2:nth-child(n-1),
+.panel .panel-body h3:nth-child(n-1),
+.panel .panel-body .h3:nth-child(n-1),
+.panel .panel-body h4:nth-child(n-1),
+.panel .panel-body .h4:nth-child(n-1),
+.panel .panel-body h5:nth-child(n-1),
+.panel .panel-body .h5:nth-child(n-1),
+.panel .panel-body h6:nth-child(n-1),
+.panel .panel-body .h6:nth-child(n-1) {
+    margin-top: 0;
+}
+.panel .panel-body .pull-right:first-child {
+    position: relative;
+    z-index: 4;
+}
+
+.modal {
+    overflow: auto;
+}
+.modal-content .close {
+    position: relative;
+    z-index: 8;
+}
+
+.label-group .label {
+    border-radius: 0;
+}
+.label-group .label:first-child {
+    border-radius: 1px 0 0 1px;
+}
+.label-group .label:last-child {
+    border-radius: 0 1px 1px 0;
+}
+
+.dropdown-menu.list-group {
+    min-width: 240px;
+    max-height: 256px;
+    padding: 0;
+    border: none;
+    overflow-y: auto;
+}
+.dropdown-menu.list-group .list-group-item {
+    border-radius: 0;
+}
+
+pre,
+code,
+.pre {
+    font-family: "Ubuntu Mono";
+}
+.pre {
+    padding: 9.5px;
+    margin: 0 0 10px;
+    overflow: auto;
+    font-size: 13px;
+    line-height: 1.42857143;
+    word-break: break-all;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.panel .panel-body > pre {
+    margin: 0;
+}
+
+.popover .popover-content p:last-child {
+    margin-bottom: 0;
+}
+
+#nprogress .bar {
+    display: none;
+}
+#nprogress .spinner {
+    z-index: 2048;
+}
+
+.multiple fieldset:not(:first-child) label {
+    opacity: 0;
+}
+.multiple fieldset:last-child .btn-delete-fieldset {
+    display: none;
+}
+.multiple fieldset:not(:last-child) {
+    margin-bottom: 8px;
+}
+
+.glass {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding-top: 32px;
+    text-align: center;
+    background: rgba(255,255,255,0.875);
+}

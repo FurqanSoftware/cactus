@@ -1,0 +1,1454 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Cactus</title>
+
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+
+		<link rel="icon" href="data:;base64,=">
+
+		<link rel="stylesheet" href="/assets/css/screen.min.css">
+	</head>
+
+	<body class="container">
+		<script type="text/template" id="tplLoading">
+			<div class="inner">
+				<h1>Cactus</h1>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplHeader">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="navbar navbar-default">
+						<div class="navbar-collapse collapse">
+							<% if(me.handle) { %>
+								<ul class="nav navbar-nav navbar-right">
+									<li class="dropdown" style="margin-right: 8px;">
+										<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+											<i class="fa fa-bell"></i>
+										</a>
+									</li>
+									<li class="dropdown">
+										<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+											<i class="fa fa-bars"></i>
+										</a>
+									</li>
+								</ul>
+								<ul class="nav navbar-nav navbar-right" style="margin-right: 16px;">
+									<p class="navbar-text">Hello, <%- me.name %></p>
+								</ul>
+							<% } %>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div id="flash"></div>
+		</script>
+
+		<script type="text/template" id="tplFooter">
+			<div class="col-xs-8"><%= contest.footer %></div>
+			<div class="col-xs-4 text-right">
+				<p class="small">
+					<a href="#about">Cactus</a>, Powered by <a href="//toph.ws" target="_blank">Toph</a>
+				</p>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplLogin">
+			<div class="col-xs-6 col-md-4 col-md-offset-2 text-right">
+				<h2><%- title %></h2>
+				<h3>
+					<small>
+						<% if(running) { %>
+							Running
+						<% } else { %>
+							<%- remains %>
+						<% } %>
+					</small>
+				</h3>
+			</div>
+
+			<div class="col-xs-6 col-md-3" style="border-left: 1px solid #DDD;">
+				<form>
+					<div class="form-group">
+						<input type="text" class="form-control" name="handle" placeholder="Handle">
+					</div>
+					<div class="form-group">
+						<input type="password" class="form-control" name="password" placeholder="Password">
+					</div>
+					<div class="form-group row" style="margin-bottom: 0;">
+						<div class="col-md-12">
+							<button type="submit" class="btn btn-primary btn-block">Login</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplSplash">
+			<div class="col-md-4 col-md-offset-4 text-center">
+				<h2><%- title %></h2>
+				<h3><small><%- remains %></small></h3>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplNav">
+			<li><a href="/problems" data-href-alt="/p">Problems</a></li>
+			<li><a href="/clarifications" data-href-alt="/c">Clarifications</a></li>
+			<li><a href="/standings">Standings</a></li>
+			<li><a href="/submissions" data-href-alt="/s">Submissions</a></li>
+		</script>
+
+		<script type="text/template" id="tplNavExtras">
+			<% if(me.level == {{.consts.Administrator}}) { %>
+				<li><a href="/accounts" data-href-alt="/a">Accounts</a></li>
+				<li><a href="/activities">Activities</a></li>
+				<li class="divider"></li>
+
+				<li><a href="/settings">Settings</a></li>
+				<li><a href="/help">Help</a></li>
+				<li class="divider"></li>
+			<% } %>
+
+			<li><a href="/logout">Logout</a></li>
+		</script>
+
+		<script type="text/template" id="tplTimer">
+			<h4 style="margin-top: 8px;"><%- title %></h4>
+			<% if(running) { %>
+				<p class="h2"><%- remains %></p>
+			<% } else { %>
+				<p class="h3"><small><%- remains %></small></p>
+			<% } %>
+		</script>
+
+		<script type="text/template" id="tplProblemList">
+		</script>
+
+		<script type="text/template" id="tplProblemListItem">
+			<span class="h2 pull-left text-center" style="width: 24px; margin: 0 15px 0 0; line-height: 40px;"><%- char.toUpperCase() %></span>
+			<h4 class="list-group-item-heading"><%- title %></h4>
+			<p class="list-group-item-text">Score: <%- _.reduce(tests, function(memo, test) { return memo+test.points }, 0) %></p>
+		</script>
+
+		<script type="text/template" id="tplProblemCreate">
+			<form class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpChar">Char</label>
+					<div class="col-md-4">
+						<select name="char" id="inpChar" class="form-control">
+							<% _.each('abcdefghijklmnopqrstuvwxyz', function(c) { %>
+								<option value="<%- c %>"<%- _.contains(charsUsed, c) ? ' disabled' : '' %>><%- c.toUpperCase() %></option>
+							<% }) %>
+						</select>
+						<div class="popover">
+							<p>Single unique alphabet for this problem</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpTitle">Title</label>
+					<div class="col-md-4">
+						<input type="text" name="title" id="inpTitle" class="form-control">
+						<div class="popover">
+							<p>Title for the problem</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<button type="submit" class="btn btn-primary" data-loading-text="Creating..">Create</button>
+						<a class="btn btn-default" href="/problems">Cancel</a>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplProblemView">
+			<% if(me.level == {{.consts.Administrator}}) { %>
+				<span class="pull-right"><a href="/p/<%- slug %>/edit">Edit</a></span>
+			<% } %>
+			<h2><%- char.toUpperCase() %>. <%- title %></h2>
+			<div class="small">
+				CPU: <%- limits.cpu %>s, Memory: <%- limits.memory %>MB
+			</div>
+			<br>
+
+			<%= statement.body %>
+			<br>
+
+			<h4>Input</h4>
+			<%= statement.input %>
+			<br>
+
+			<h4>Output</h4>
+			<%= statement.output %>
+			<br>
+
+			<% if(samples.length > 0) { %>
+				<h4>Sample<%- samples.length == 1 ? '' : 's' %></h4>
+				<% _.each(samples, function(sample) { %>
+					<table class="table">
+						<thead>
+							<tr>
+								<th>Input</th>
+								<th>Output</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="pre"><%- sample.input %></td>
+								<td class="pre"><%- sample.answer %></td>
+							</tr>
+						</tbody>
+					</table>
+				<% }) %>
+			<% } %>
+
+			<br>
+
+			<p class="small"><%- notes %></p>
+		</script>
+
+		<script type="text/template" id="tplProblemSubmit">
+			<h4 style="margin-bottom: 20px;">Submit</h4>
+			<form>
+				<div class="form-group">
+					<select class="form-control" name="language">
+						<% if(_.contains(languages, 'c')) { %>
+							<option value="c">C</option>
+						<% } %>
+						<% if(_.contains(languages, 'cpp')) { %>
+							<option value="cpp">C++</option>
+						<% } %>
+						<% if(_.contains(languages, 'java')) { %>
+							<option value="java">Java</option>
+						<% } %>
+					</select>
+				</div>
+				<div class="form-group">
+					<input type="file" class="form-control" name="source">
+				</div>
+				<button type="submit" class="btn btn-primary" data-loading-text="Submit..">Submit</button>
+				<% if(checker.language) { %>
+					<br>
+					<small class="small">Submissions are validated using a custom checker</small>
+				<% } %>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplProblemEdit">
+			<form class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpChar">Char</label>
+					<div class="col-md-4">
+						<select name="char" id="inpChar" class="form-control">
+							<% _.each('abcdefghijklmnopqrstuvwxyz', function(c) { %>
+								<option value="<%- c %>"<%- char == c ? ' selected' : '' %><%- _.contains(charsUsed, c) && char != c ? ' disabled' : '' %>><%- c.toUpperCase() %></option>
+							<% }) %>
+						</select>
+						<div class="popover">
+							<p>Single unique alphabet for this problem</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpTitle">Title</label>
+					<div class="col-md-4">
+						<input type="text" name="title" id="inpTitle" class="form-control" value="<%- title %>">
+						<div class="popover">
+							<p>Title for the problem</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpStatementBody">Body</label>
+					<div class="col-md-4">
+						<textarea name="statement[body]" id="inpStatementBody" class="form-control"><%- statement.body %></textarea>
+						<div class="popover">
+							<p>Body for the problem</p>
+							<p class="small">Try Markdown</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpStatementInput">Input</label>
+					<div class="col-md-4">
+						<textarea name="statement[input]" id="inpStatementInput" class="form-control"><%- statement.input %></textarea>
+						<div class="popover">
+							<p>Input for the problem</p>
+							<p class="small">Try Markdown</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpStatementOutput">Output</label>
+					<div class="col-md-4">
+						<textarea name="statement[output]" id="inpStatementOutput" class="form-control"><%- statement.output %></textarea>
+						<div class="popover">
+							<p>Output for the problem</p>
+							<p class="small">Try Markdown</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="multiple">
+					<% _.each(samples, function(sample, i) { %>
+						<fieldset>
+							<div class="form-group">
+								<label class="control-label col-md-2" for="inpSamplesIn">Samples</label>
+								<div class="col-md-4">
+									<textarea type="text" name="samples[][input]" id="inpSamplesIn" class="form-control"><%- sample.input %></textarea>
+									<div class="popover">
+										<p>An input for the sample</p>
+									</div>
+								</div>
+								<div class="col-md-2">
+									<button type="button" class="btn btn-danger btn-delete-fieldset"><span class="fa fa-times"></span></button>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="control-label col-md-2" for="inpSamplesAns">&nbsp;</label>
+								<div class="col-md-4">
+									<textarea type="text" name="samples[][answer]" id="inpSamplesAns" class="form-control"><%- sample.answer %></textarea>
+									<div class="popover">
+										<p>An output for the sample</p>
+									</div>
+								</div>
+							</div>
+						</fieldset>
+					<% }) %>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpNotes">Notes</label>
+					<div class="col-md-4">
+						<textarea type="text" name="notes" id="inpNotes" class="form-control"><%- notes %></textarea>
+						<div class="popover">
+							<p>Notes for the problem</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpJudge">Judge</label>
+					<div class="col-md-4">
+						<select name="judge" id="inpJudge" class="form-control">
+							<option value="automatic"<%- judge == 'automatic' ? ' selected' : '' %>>Automatic</option>
+							<option value="manual"<%- judge == 'manual' ? ' selected' : '' %>>Manual</option>
+						</select>
+						<div class="popover">
+							<p>Judge behavior for the problem</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpCheckerLanguage">Checker</label>
+					<div class="col-md-4">
+						<select name="checker[language]" id="inpCheckerLanguage" class="form-control">
+							<option value=""></option>
+							<option value="c"<%- checker && checker.language == 'c' ? ' selected' : '' %>>C</option>
+							<option value="cpp"<%- checker && checker.language == 'cpp' ? ' selected' : '' %>>C++</option>
+							<option value="java"<%- checker && checker.language == 'java' ? ' selected' : '' %>>Java</option>
+						</select>
+						<div class="popover">
+							<p>Checker for the problem</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpCheckerSource">&nbsp;</label>
+					<div class="col-md-4">
+						<% if(checker && checker.sourceKey) { %>
+						<input type="text" id="inpCheckerSource" class="form-control" value="[Attached]" readonly>
+						<input type="hidden" name="checker[sourceKey]" value="<%- checker.sourceKey %>">
+						<% } else { %>
+						<input type="file" id="inpCheckerSource" class="form-control" name="checker[source]">
+						<% } %>
+					</div>
+					<% if(checker && checker.sourceKey) { %>
+						<div class="col-md-2">
+							<button type="button" class="btn btn-danger btn-reset-field-file"><span class="fa fa-times"></span></button>
+						</div>
+					<% } %>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLimitsCpu">CPU</label>
+					<div class="col-md-4">
+						<input type="number" name="limits[cpu]" id="inpLimitsCpu" class="form-control" value="<%- limits.cpu %>" step="0.1">
+						<div class="popover">
+							<p>CPU limit for the problem in seconds</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLimitsMemory">Memory</label>
+					<div class="col-md-4">
+						<input type="number" name="limits[memory]" id="inpLimitsMemory" class="form-control" value="<%- limits.memory %>" step="0.1">
+						<div class="popover">
+							<p>Memory limit for the problem in megabytes</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLanguages">Languages</label>
+					<div class="col-md-4">
+						<select name="languages" id="inpLanguages" class="form-control" multiple>
+							<option value="c"<%- _.contains(languages, 'c') ? ' selected' : '' %>>C</option>
+							<option value="cpp"<%- _.contains(languages, 'cpp') ? ' selected' : '' %>>C++</option>
+							<option value="java"<%- _.contains(languages, 'java') ? ' selected' : '' %>>Java</option>
+						</select>
+						<div class="popover">
+							<p>Languages for the problem</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="multiple">
+					<% _.each(tests, function(test, i) { %>
+						<fieldset>
+							<div class="form-group">
+								<label class="control-label col-md-2" for="inpDatasetIn">Tests</label>
+								<div class="col-md-4">
+									<% if(test.inputKey) { %>
+										<input type="text" id="inpDatasetIn" class="form-control" value="[Attached]" readonly>
+										<input type="hidden" name="tests[][inputKey]" value="<%- test.inputKey %>">
+									<% } else { %>
+										<input type="file" id="inpDatasetIn" class="form-control" name="tests[][input]">
+									<% } %>
+								</div>
+								<div class="col-md-2">
+									<button type="button" class="btn btn-danger btn-delete-fieldset"><span class="fa fa-times"></span></button>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="control-label col-md-2" for="inpDatasetAns">&nbsp;</label>
+								<div class="col-md-4">
+									<% if(test.answerKey) { %>
+										<input type="text" id="inpDatasetIn" class="form-control" value="[Attached]" readonly>
+										<input type="hidden" name="tests[][answerKey]" value="<%- test.answerKey %>">
+									<% } else { %>
+										<input type="file" id="inpDatasetAns" class="form-control" name="tests[][answer]">
+									<% } %>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="control-label col-md-2" for="inpDatasetPoints">&nbsp;</label>
+								<div class="col-md-4">
+									<input type="number" name="tests[][points]" id="inpDatasetPoints" class="form-control" value="<%- test.points %>" min="0">
+									<div class="popover">
+										<p>Points for this test</p>
+									</div>
+								</div>
+							</div>
+						</fieldset>
+					<% }) %>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpScoring">Scoring</label>
+					<div class="col-md-4">
+						<select name="scoring" id="inpScoring" class="form-control">
+							<option value="strict"<%- scoring == 'strict' ? ' selected' : '' %>>Strict</option>
+							<option value="partial"<%- scoring == 'partial' ? ' selected' : '' %>>Partial</option>
+						</select>
+						<div class="popover">
+							<p>Scoring criteria for the problem</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<button type="submit" class="btn btn-primary" data-loading-text="Updating..">Update</button>
+						<a class="btn btn-default" href="/p/<%- slug %>">Cancel</a>
+						<button type="button" class="btn btn-danger btn-delete pull-right" data-loading-text="Deleting.." data-confirm-text="Delete problem '<%- title %>'?">Delete</button>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplClarificationList">
+		</script>
+
+		<script type="text/template" id="tplClarificationListItem">
+			<h4 class="list-group-item-heading">
+				<% if(problem) { %>
+					[<%- problem.char.toUpperCase() %>. <%- problem.title %>]
+				<% } %>
+				<%- question.truncate(48, 'right', '..') %>
+				<% if(asker && (me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}})) { %>
+					<small>
+						&mdash; <%- asker.name %>,
+						<span title="<%- moment(created).format() %>" data-time="<%- created %>"><%- moment(created).fromNow() %></span>
+					</small>
+				<% } %>
+			</h4>
+			<% if(response == {{.consts.Answered}}) { %>
+				<p class="list-group-item-text"><%- message.truncate(96, 'right', '..') %></p>
+			<% } %>
+		</script>
+
+		<script type="text/template" id="tplClarificationRequest">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Request Clarification</h4>
+			</div>
+			<div class="modal-body">
+				<form class="form-horizontal">
+					<br>
+
+					<div class="form-group">
+						<label class="control-label col-md-3" for="inpProblemId">Problem</label>
+						<div class="col-md-6">
+							<select name="problemId" id="inpProblemId" class="form-control">
+								<option value="0"></option>
+								<% _.each(problems, function(prob) { %>
+									<option value="<%- prob.id %>"><%- prob.char.toUpperCase() %>. <%- prob.title %></option>
+								<% }) %>
+							</select>
+							<div class="popover">
+								<p>Problem relevant to this clarification</p>
+							</div>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="control-label col-md-3" for="inpQuestion">Question</label>
+						<div class="col-md-6">
+							<textarea name="question" id="inpQuestion" class="form-control"></textarea>
+							<div class="popover">
+								<p>The question that you want to ask</p>
+								<p class="small">Be precise</p>
+							</div>
+						</div>
+					</div>
+
+					<br>
+
+					<div class="form-group">
+						<div class="col-md-6 col-md-offset-3">
+							<button type="submit" class="btn btn-primary" data-loading-text="Creating..">Create</button>
+							<button class="btn btn-default" data-dismiss="modal">Cancel</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplClarificationView">
+			<% if(me.level == {{.consts.Administrator}}) { %>
+				<span class="pull-right small"><a href="/c/<%- id %>/edit">Edit</a></span>
+			<% } %>
+			<h3>
+				<% if(problem) { %>
+					[<a href="/p/<%- problem.slug %>"><%- problem.char.toUpperCase() %>. <%- problem.title %></a>]
+				<% } %>
+				<%- question.truncate(24, 'right', '..') %>
+				<% if(asker && (me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}})) { %>
+					<small>
+						&mdash; <%- asker.name %>,
+						<span title="<%- moment(created).format() %>" data-time="<%- created %>"><%- moment(created).fromNow() %></span>
+					</small>
+				<% } %>
+			</h3>
+			<div style="white-space: pre-wrap;"><%- question %></div>
+			<% if(response != {{.consts.Unresponded}}) { %>
+				<hr>
+				<%= message %>
+			<% } else if(me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}}) { %>
+				<hr>
+				<form>
+					<input type="hidden" name="response">
+					<div class="form-group">
+						<textarea name="message" class="form-control"></textarea>
+					</div>
+					<div class="form-group">
+						<div class="btn-group">
+							<button type="submit" class="btn btn-primary btn-answer" data-loading-text="Answering" data-value='{{.consts.Answered}}'>Answer</button>
+							<button type="submit" class="btn btn-primary btn-broadcast" data-loading-text="Broadcasting" data-value='{{.consts.Broadcasted}}'>Broadcast</button>
+						</div>
+						<div class="btn-group">
+							<button type="submit" class="btn btn-default btn-ignore" data-loading-text="Ignoring" data-value='{{.consts.Ignored}}'>Ignore</button>
+						</div>
+					</div>
+				</form>
+			<% } %>
+		</script>
+
+		<script type="text/template" id="tplClarificationEdit">
+			<form class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpProblemId">Problem</label>
+					<div class="col-md-4">
+						<select name="problemId" id="inpProblemId" class="form-control">
+							<option value="0"></option>
+							<% _.each(problems, function(prob) { %>
+								<option value="<%- prob.id %>"<%- problem && prob.id == problem.id ? ' selected' : '' %>><%- prob.char.toUpperCase() %>. <%- prob.title %></option>
+							<% }) %>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpQuestion">Question</label>
+					<div class="col-md-4">
+						<textarea name="question" id="inpQuestion" class="form-control"><%- question %></textarea>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpResponse">Response</label>
+					<div class="col-md-4">
+						<select name="response" id="inpResponse" class="form-control">
+							<option value="{{.consts.Unresponded}}"<%- response == '{{.consts.Unresponded}}' ? ' selected' : '' %>>Unresponded</option>
+							<option value="{{.consts.Ignored}}"<%- response == '{{.consts.Ignored}}' ? ' selected' : '' %>>Ignored</option>
+							<option value="{{.consts.Answered}}"<%- response == '{{.consts.Answered}}' ? ' selected' : '' %>>Answered</option>
+							<option value="{{.consts.Broadcasted}}"<%- response == '{{.consts.Broadcasted}}' ? ' selected' : '' %>>Broadcasted</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpMessage">Message</label>
+					<div class="col-md-4">
+						<textarea name="message" id="inpMessage" class="form-control"><%- message %></textarea>
+						<div class="popover">
+							<p>Message for the response</p>
+							<p class="small">Try Markdown</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<button type="submit" class="btn btn-primary" data-loading-text="Updating..">Update</button>
+						<a class="btn btn-default" href="/c/<%- id %>">Cancel</a>
+						<% if(me.level == {{.consts.Administrator}}) { %>
+							<button type="button" class="btn btn-danger btn-delete pull-right" data-loading-text="Deleting.." data-confirm-text="Delete clarification?">Delete</button>
+						<% } %>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplStandingToolbar">
+			<div class="btn-toolbar">
+				<% if(select) { %>
+					<div class="btn-group">
+						<a class="btn btn-primary btn-reset">Reset</a>
+						<a class="btn btn-primary btn-judge">Judge</a>
+					</div>
+					<div class="btn-group">
+						<a class="btn btn-danger btn-cancel">Cancel</a>
+					</div>
+
+				<% } else { %>
+					<div class="btn-group">
+						<a class="btn btn-primary btn-select">Select</a>
+					</div>
+				<% } %>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplStandingList">
+			<thead>
+				<tr>
+					<th class="text-center" width="32">#</th>
+					<th>Author</th>
+					<th width="96"></th>
+					<% _.each(problems, function(prob) { %>
+						<% if(!me.handle) { %>
+							<th class="text-center" width="64"><%- prob.char.toUpperCase() %></th>
+						<% } else { %>
+							<th class="text-center" width="64"><a href="/p/<%- prob.slug %>"><%- prob.char.toUpperCase() %></a></th>
+						<% } %>
+					<% }) %>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+		</script>
+
+		<script type="text/template" id="tplStandingListItem">
+			<td class="text-center"><%- rank %></td>
+			<td>
+				<% if(me.level != {{.consts.Judge}} || me.level != {{.consts.Administrator}}) { %>
+					<%- author.name %>
+				<% } else { %>
+					<a href="/a/<%- author.handle %>"><%- author.name %></a>
+				<% } %>
+			</td>
+			<td>
+				<span class="label-group">
+					<span class="label label-success"><%- score %></span><span class="label label-default"><%- penalty %></span>
+				</span>
+			</td>
+			<% _.each(problems, function(prob) { %>
+				<td>
+					<% if(attempts[prob.id] && (attempts[prob.id].tries+attempts[prob.id].extras) > 0) { %>
+						<span class="label-group">
+							<span class="label label-<%- attempts[prob.id].perfect ? 'info' : 'warning' %>"><%- attempts[prob.id].score %></span><span class="label label-default"><%- attempts[prob.id].penalty %> (<%- attempts[prob.id].tries %>)</span>
+						</span>
+					<% } %>
+				</td>
+			<% }) %>
+		</script>
+
+		<script type="text/template" id="tplSubmissionList">
+			<thead>
+				<tr>
+					<th class="text-center" width="48">
+						<% if(select) { %>
+							<input type="checkbox">
+						<% } else { %>
+							#
+						<% } %>
+					</th>
+					<% if(me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}}) { %>
+						<th>Author</th>
+					<% } %>
+					<th>Problem</th>
+					<th>Time</th>
+					<th>Language</th>
+					<th>CPU</th>
+					<th>Memory</th>
+					<th width="96"></th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
+			<tfoot>
+				<tr>
+					<td class="text-center" colspan="8"><a class="small" href="#more">More..</a></th>
+				</tr>
+			</tfoot>
+		</script>
+
+		<script type="text/template" id="tplSubmissionListItem">
+			<td class="text-center">
+				<% if(select) { %>
+					<input type="checkbox" value="<%- id %>"<%- selected ? ' checked' : '' %>>
+				<% } else { %>
+					<% if((me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}} || (author && me.id == author.id)) && !single) { %>
+						<a href="/s/<%- id %>"><%- id %></a>
+					<% } else { %>
+						<%- id %>
+					<% } %>
+				<% } %>
+			</td>
+			<% if(me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}}) { %>
+				<td>
+					<% if(author) { %>
+						<% if(me.level != {{.consts.Judge}} || me.level != {{.consts.Administrator}}) { %>
+							<%- author.name %>
+						<% } else { %>
+							<a href="/a/<%- author.handle %>"><%- author.name %></a>
+						<% } %>
+					<% } %>
+				</td>
+			<% } %>
+			<td>
+				<% if(problem) { %>
+					<a href="/p/<%- problem.slug %>"><%- problem.char.toUpperCase() %>. <%- problem.title %></a>
+				<% } %>
+			</td>
+			<td class="col-time"><span title="<%- moment(created).format() %>" data-time="<%- created %>"><%- moment(created).fromNow() %></span></td>
+			<td><%- language %></td>
+			<td>
+				<% if(manual) { %>
+					-
+				<% } else { %>
+					<%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.cpu) }, 0) %>s
+				<% } %>
+			</td>
+			<td>
+				<% if(manual) { %>
+					-
+				<% } else { %>
+					<%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.memory) }, 0) %>MB
+				<% } %>
+			</td>
+			<td class="text-right">
+				<% if(verdict == {{.consts.Accepted}}) { %>
+					<span class="label label-success">Accepted</span>
+				<% } else if(verdict == {{.consts.WrongAnswer}}) { %>
+					<span class="label label-danger">Wrong Answer</span>
+				<% } else if(verdict == {{.consts.CpuLimitExceeded}}) { %>
+					<span class="label label-danger">CPU Limit Exceeded</span>
+				<% } else if(verdict == {{.consts.MemoryLimitExceeded}}) { %>
+					<span class="label label-danger">Memory Limit Exceeded</span>
+				<% } else if(verdict == {{.consts.CompilationError}}) { %>
+					<span class="label label-danger">Compilation Error</span>
+				<% } else { %>
+					<span class="label label-default">Queued</span>
+				<% } %>
+			</td>
+		</script>
+
+		<script type="text/template" id="tplSubmissionListFilter">
+			<h4 style="margin-bottom: 20px;">Filter</h4>
+			<form>
+				<div class="form-group">
+					<select name="author" class="form-control">
+						<option value="0">Any author</option>
+						<% _.each(accounts, function(acc) { %>
+							<option value="<%- acc.id %>"><%- acc.name %></option>
+						<% }) %>
+					</select>
+				</div>
+				<div class="form-group">
+					<select name="problem" class="form-control">
+						<option value="0">Any problem</option>
+						<% _.each(problems, function(prob) { %>
+							<option value="<%- prob.id %>"><%- prob.char.toUpperCase() %>. <%- prob.title %></option>
+						<% }) %>
+					</select>
+				</div>
+				<div class="form-group">
+					<select name="language" class="form-control">
+						<option value="">Any language</option>
+						<option value="c">C</option>
+						<option value="cpp">C++</option>
+						<option value="java">Java</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<select name="verdict" class="form-control">
+						<option value="">Any verdict</option>
+						<option value="{{.consts.Accepted}}">Accepted</option>
+						<option value="{{.consts.WrongAnswer}}">Wrong Answer</option>
+						<option value="{{.consts.CpuLimitExceeded}}">CPU Limit Exceeded</option>
+						<option value="{{.consts.MemoryLimitExceeded}}">Memory Limit Exceeded</option>
+						<option value="{{.consts.CompilationError}}">Compilation Error</option>
+					</select>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplSubmissionTestList">
+			<thead>
+				<tr>
+					<th class="text-center" width="48">#</th>
+					<th>CPU</th>
+					<th>Memory</th>
+					<th>Difference</th>
+					<th>Points</th>
+					<th width="96"></th>
+				</tr>
+			</thead>
+			<tbody>
+				<% if(problem) { %>
+					<% _.each(_.zip(problem.tests, tests||[]), function(test, i) { %>
+						<tr>
+							<% if(test[1]) { %>
+								<td class="text-center">
+									<% if((me.level != {{.consts.Judge}} || me.level != {{.consts.Administrator}}) && author && me.id != author.id) { %>
+										<%- i+1 %>
+									<% } else { %>
+										<a href="#compare-<%- i+1 %>"><%- i+1 %></a>
+									<% } %>
+								</td>
+								<td><%- test[1].usages.cpu %>s</td>
+								<td><%- test[1].usages.memory %>MB</td>
+								<td><%- test[1].difference %></td>
+								<td><%- test[1].points %></td>
+								<td class="text-right">
+									<% if(test[1].verdict == {{.consts.Accepted}}) { %>
+										<span class="label label-success">Accepted</span>
+									<% } else if(test[1].verdict == {{.consts.WrongAnswer}}) { %>
+										<span class="label label-danger">Wrong Answer</span>
+									<% } else if(test[1].verdict == {{.consts.CpuLimitExceeded}}) { %>
+										<span class="label label-danger">CPU Limit Exceeded</span>
+									<% } else if(test[1].verdict == {{.consts.MemoryLimitExceeded}}) { %>
+										<span class="label label-danger">Memory Limit Exceeded</span>
+									<% } else if(test[1].verdict == {{.consts.CompilationError}}) { %>
+										<span class="label label-danger">Compilation Error</span>
+									<% } %>
+								</td>
+							<% } else { %>
+								<td class="text-center"><%- i+1 %></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td class="text-right"></td>
+							<% } %>
+						</tr>
+					<% }) %>
+				<% } %>
+			</tbody>
+		</script>
+
+		<script type="text/template" id="tplSubmissionSource">
+			<pre class="pre-scrollable"><code><%= source %></code></pre>
+		</script>
+
+		<script type="text/template" id="tplSubmissionVerdict">
+			<h4 style="margin-bottom: 20px;">Verdict</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<button class="btn btn-primary btn-block btn-execute">Execute</button>
+				</div>
+				<div class="col-md-6">
+					<button class="btn btn-default btn-block btn-manual">Manual</button>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplSubmissionExecution">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Execution</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-4">
+						<div class="panel panel-default">
+							<div class="panel-body" style="position: relative;">
+								<form>
+									<p class="row">
+										<div class="col-md-4"><b>CPU</b></div>
+										<div class="col-md-8 text-right"><%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.cpu) }, 0) %>s</div>
+									</p>
+									<p class="row">
+										<div class="col-md-4"><b>Memory</b></div>
+										<div class="col-md-8 text-right"><%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.memory) }, 0) %>MB</div>
+									</p>
+									<p class="row">
+										<div class="col-md-4"><b>Verdict</b></div>
+										<div class="col-md-8 text-right">
+											<% if(verdict == {{.consts.Accepted}}) { %>
+												<span class="label label-success">Accepted</span>
+											<% } else if(verdict == {{.consts.WrongAnswer}}) { %>
+												<span class="label label-danger">Wrong Answer</span>
+											<% } else if(verdict == {{.consts.CpuLimitExceeded}}) { %>
+												<span class="label label-danger">CPU Limit Exceeded</span>
+											<% } else if(verdict == {{.consts.MemoryLimitExceeded}}) { %>
+												<span class="label label-danger">Memory Limit Exceeded</span>
+											<% } else if(verdict == {{.consts.CompilationError}}) { %>
+												<span class="label label-danger">Compilation Error</span>
+											<% } %>
+										</div>
+									</p>
+									<br>
+									<br>
+									<br>
+									<div class="row">
+										<div class="col-md-6">
+											<button type="submit" class="btn btn-primary btn-apply btn-block" data-loading-text="Apply..">Apply</button>
+										</div>
+										<div class="col-md-6">
+											<button type="button" class="btn btn-default btn-tamper btn-block">Tamper</button>
+										</div>
+									</div>
+								</form>
+								<% if(status < 7) { %>
+									<div class="glass">
+										<h4>
+											<% if(status == 0) { %>
+												<span class="label">Waiting</span>
+											<% } else if(status == 1) { %>
+												<span class="label label-info">Building</span>
+											<% } else if(status == 2) { %>
+												<span class="label label-info">Running</span>
+											<% } else if(status == 6) { %>
+												<span class="label label-danger">Paniced</span>
+											<% } %>
+										</h4>
+									</div>
+								<% } %>
+							</div>
+						</div>
+					</div>
+					<div class="col-md-8">
+						<div class="panel panel-default table-responsive">
+							<% if(status < 7 || verdict != 'compilation-error') { %>
+								<table class="table">
+									<thead>
+										<tr>
+											<th class="text-center" width="48">#</th>
+											<th>CPU</th>
+											<th>Memory</th>
+											<th>Difference</th>
+											<th>Points</th>
+											<th width="96"></th>
+										</tr>
+									</thead>
+									<tbody>
+										<% _.each(_.zip(problem.tests, tests||[]), function(test, i) { %>
+											<tr>
+												<% if(test[1]) { %>
+													<td class="text-center"><a href="#compare-<%- i+1 %>"><%- i+1 %></a></td>
+													<td><%- test[1].usages.cpu %>s</td>
+													<td><%- test[1].usages.memory %>MB</td>
+													<td><%- test[1].difference %></td>
+													<td><%- test[1].points %></td>
+													<td class="text-right">
+														<% if(test[1].verdict == {{.consts.Accepted}}) { %>
+															<span class="label label-success">Accepted</span>
+														<% } else if(test[1].verdict == {{.consts.WrongAnswer}}) { %>
+															<span class="label label-danger">Wrong Answer</span>
+														<% } else if(test[1].verdict == {{.consts.CpuLimitExceeded}}) { %>
+															<span class="label label-danger">CPU Limit Exceeded</span>
+														<% } else if(test[1].verdict == {{.consts.MemoryLimitExceeded}}) { %>
+															<span class="label label-danger">Memory Limit Exceeded</span>
+														<% } else if(test[1].verdict == {{.consts.CompilationError}}) { %>
+															<span class="label label-danger">Compilation Error</span>
+														<% } %>
+													</td>
+												<% } else { %>
+													<td class="text-center"><%- i+1 %></td>
+													<td></td>
+													<td></td>
+													<td></td>
+													<td></td>
+													<td class="text-right">
+														<span class="label label-default">...</span>
+													</td>
+												<% } %>
+											</tr>
+										<% }) %>
+									</tbody>
+								</table>
+							<% } else { %>
+								<div class="panel-body">
+									<pre class="pre-scrollable"><code><%- build.error %></code></pre>
+								</div>
+							<% } %>
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplSubmissionManual">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Manual</h4>
+			</div>
+			<div class="modal-body">
+				<form class="form-horizontal">
+					<br>
+
+					<div class="form-group">
+						<label class="control-label col-md-3" for="inpVerdict">Verdict</label>
+						<div class="col-md-6">
+							<select name="verdict" id="inpVerdict" class="form-control">
+								<option value="{{.consts.Accepted}}"<%- verdict == {{.consts.Accepted}} ? ' selected' : '' %>>Accepted</option>
+								<option value="{{.consts.WrongAnswer}}"<%- verdict == {{.consts.WrongAnswer}} ? ' selected' : '' %>>Wrong Answer</option>
+								<option value="{{.consts.CpuLimitExceeded}}"<%- verdict == {{.consts.CpuLimitExceeded}} ? ' selected' : '' %>>CPU Limit Exceeded</option>
+								<option value="{{.consts.MemoryLimitExceeded}}"<%- verdict == {{.consts.MemoryLimitExceeded}} ? ' selected' : '' %>>Memory Limit Exceeded</option>
+								<option value="{{.consts.CompilationError}}"<%- verdict == {{.consts.CompilationError}} ? ' selected' : '' %>>Compilation Error</option>
+							</select>
+						</div>
+					</div>
+
+					<br>
+
+					<div class="form-group">
+						<div class="col-md-6 col-md-offset-3">
+							<button type="submit" class="btn btn-primary" data-loading-text="Applying..">Apply</button>
+							<button class="btn btn-default" data-dismiss="modal">Cancel</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplComparator">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Comparator</h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-md-6">
+						<h5><%- leftLabel %></h5>
+						<pre class="pre-scrollable"><code><%= left %></code></pre>
+						<button class="btn btn-primary btn-download-left">Download</button>
+					</div>
+					<div class="col-md-6">
+						<h5><%- rightLabel %></h5>
+						<pre class="pre-scrollable"><code><%= right %></code></pre>
+						<button class="btn btn-primary btn-download-right">Download</button>
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplAccountList">
+		</script>
+
+		<script type="text/template" id="tplAccountListFilter">
+			<h4 style="margin-bottom: 20px;">Filter</h4>
+			<form>
+				<div class="form-group">
+					<select name="level" class="form-control">
+						<option value="">Any level</option>
+						<option value="{{.consts.Participant}}">Participant</option>
+						<option value="{{.consts.Judge}}">Judge</option>
+						<option value="{{.consts.Administrator}}">Administrator</option>
+					</select>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplAccountListItem">
+			<h4 class="list-group-item-heading">
+				<%- name %> <span class="small">(<%- handle %>)</span>
+			</h4>
+		</script>
+
+		<script type="text/template" id="tplAccountCreate">
+			<form class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpHandle">Handle</label>
+					<div class="col-md-4">
+						<input type="text" name="handle" id="inpHandle" class="form-control">
+						<div class="popover">
+							<p>Unique handle that is at least 4 characters long</p>
+							<p class="small">Should be unique</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpPassword">Password</label>
+					<div class="col-md-4">
+						<input type="text" name="password" id="inpPassword" class="form-control">
+						<div class="popover">
+							<p>Password that is at least 4 characters long</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLevel">Level</label>
+					<div class="col-md-4">
+						<select name="level" id="inpLevel" class="form-control">
+							<option value="{{.consts.Participant}}">Participant</option>
+							<option value="{{.consts.Judge}}">Judge</option>
+							<option value="{{.consts.Administrator}}">Administrator</option>
+						</select>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpName">Name</label>
+					<div class="col-md-4">
+						<input type="text" name="name" id="inpName" class="form-control">
+						<div class="popover">
+							<p>Display name for the account</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<button type="submit" class="btn btn-primary" data-loading-text="Creating..">Create</button>
+						<a class="btn btn-default" href="/accounts">Cancel</a>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplAccountImport">
+			<div class="row">
+				<div class="col-md-6 col-md-push-6">
+						<br>
+
+						<div class="row">
+							<div class="col-md-8 col-md-offset-2">
+								<p>The file must be csv encoded containing the fields handle, password, level (1-3) and name, describing each account to import, one per line</p>
+							</div>
+						</div>
+				</div>
+
+				<div class="col-md-6 col-md-pull-6">
+					<form class="form-horizontal">
+						<br>
+
+						<div class="form-group">
+							<label class="control-label col-md-4" for="inpFile">File</label>
+							<div class="col-md-8">
+								<input type="file" id="inpFile" class="form-control" name="file">
+							</div>
+						</div>
+
+						<br>
+
+						<div class="form-group">
+							<div class="col-md-8 col-md-offset-4">
+								<button type="submit" class="btn btn-primary" data-loading-text="Importing..">Import</button>
+								<a class="btn btn-default" href="/accounts">Cancel</a>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplAccountEdit">
+			<form class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpHandle">Handle</label>
+					<div class="col-md-4">
+						<input type="text" name="handle" id="inpHandle" class="form-control" value="<%- handle %>">
+						<div class="popover">
+							<p>Unique handle that is at least 4 characters long</p>
+							<p class="small">Should be unique</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpPassword">Password</label>
+					<div class="col-md-4">
+						<input type="text" name="password" id="inpPassword" class="form-control">
+						<div class="popover">
+							<p>Password that is at least 4 characters long</p>
+							<p class="small">Leave this empty to keep the password unchanged</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLevel">Level</label>
+					<div class="col-md-4">
+						<% if(id == 1) { %>
+							<input type="text" class="form-control" value="Administrator" readonly>
+						<% } else { %>
+							<select name="level" id="inpLevel" class="form-control">
+								<option value="{{.consts.Participant}}"<%- level == {{.consts.Participant}} ? ' selected' : '' %>>Participant</option>
+								<option value="{{.consts.Judge}}"<%- level == {{.consts.Judge}} ? ' selected' : '' %>>Judge</option>
+								<option value="{{.consts.Administrator}}"<%- level == {{.consts.Administrator}} ? ' selected' : '' %>>Administrator</option>
+							</select>
+						<% } %>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpName">Name</label>
+					<div class="col-md-4">
+						<input type="text" name="name" id="inpName" class="form-control" value="<%- name %>">
+						<div class="popover">
+							<p>Display name for the account</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<button type="submit" class="btn btn-primary" data-loading-text="Updating..">Update</button>
+						<a class="btn btn-default" href="/accounts">Cancel</a>
+						<button type="button" class="btn btn-danger btn-delete pull-right"<%- me.id == id || id == 1 ? ' disabled' : '' %> data-loading-text="Deleting.." data-confirm-text="Delete account '<%- handle %>'?">Delete</button>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplActivityList">
+		</script>
+
+		<script type="text/template" id="tplActivityListItem">
+			<a href="/a/<%= actor.handle %>"><%= actor.name %></a> <%= record %>
+		</script>
+
+		<script type="text/template" id="tplNotificationList">
+		</script>
+
+		<script type="text/template" id="tplNotificationListItem">
+			<%= message %>
+		</script>
+
+		<script type="text/template" id="tplSettings">
+			<form class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpTitle">Title</label>
+					<div class="col-md-4">
+						<input type="text" name="title" id="inpTitle" class="form-control" value="<%- title %>">
+						<div class="popover">
+							<p>Title of the contest</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpFooter">Footer</label>
+					<div class="col-md-4">
+						<input type="text" name="footer" id="inpFooter" class="form-control" value="<%- footer %>">
+						<div class="popover">
+							<p>Footer for all pages</p>
+							<p class="small">Try Markdown</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpStarts">Starts at</label>
+					<div class="col-md-4">
+						<input type="text" name="starts" id="inpStarts" class="form-control" value="<%- starts %>">
+						<div class="popover">
+							<p>Starting time of the contest in ISO8601 format</p>
+							<ul class="small">
+								<li>1990-05-26T23:59:59+06:00</li>
+							</ul>
+							<p>Or something like</p>
+							<ul class="small">
+								<li>in 5 minutes</li>
+								<li>tomorrow 4pm</li>
+								<li>1:30pm</li>
+								<li>now</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLength">Length</label>
+					<div class="col-md-4">
+						<input type="number" name="length" id="inpLength" class="form-control" value="<%- length %>">
+						<div class="popover">
+							<p>Length of the contest in minutes</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<button type="submit" class="btn btn-primary" data-loading-text="Applying..">Apply</button>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplAbout">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Cactus <small>v0.1</small></h4>
+			</div>
+			<div class="modal-body">
+				<div class="row">
+					<div class="col-sm-8">
+						<p>
+							The awesome programming contest hosting application<br>
+							<a href="http://toph.ws/cactus" target="_blank">toph.ws/cactus</a>
+						</p>
+						<br>
+						<br>
+						<br>
+						<br>
+						<br>
+						<p class="small">
+							Copyright 2014 The Cactus Authors. All rights reserved.<br>
+							Built using magic and <a href="#credits">open source software</a>.
+						</p>
+						<p class="small">
+							<a href="#terms">Terms of Service</a>
+						</p>
+					</div>
+					<div class="col-sm-4">
+						<img class="img-responsive" src="/assets/img/mascot.png">
+					</div>
+				</div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplCredits">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Credits</h4>
+			</div>
+			<div class="modal-body">
+				<div class="panel-group"></div>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplTerms">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title">Terms of Service</h4>
+			</div>
+			<div class="modal-body">
+				<p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&rsquo;s standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.</p>
+				<p>It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout. The point of using Lorem Ipsum is that it has a more-or-less normal distribution of letters, as opposed to using &lsquo;Content here, content here&rsquo;, making it look like readable English. Many desktop publishing packages and web page editors now use Lorem Ipsum as their default model text, and a search for &lsquo;lorem ipsum&rsquo; will uncover many web sites still in their infancy. Various versions have evolved over the years, sometimes by accident, sometimes on purpose (injected humour and the like).</p>
+				<p>Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of &ldquo;de Finibus Bonorum et Malorum&rdquo; (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, &ldquo;Lorem ipsum dolor sit amet..&rdquo;, comes from a line in section 1.10.32.</p>
+				<p>The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from &ldquo;de Finibus Bonorum et Malorum&rdquo; by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.</p>
+			</div>
+		</script>
+
+		<script type="text/template" id="tplLicense">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times</button>
+				<h4 class="modal-title"><%- name %> / License</h4>
+			</div>
+			<div class="modal-body">
+				<pre class="pre-scrollable"><%- license %></pre>
+			</div>
+		</script>
+
+		<script type="text/javascript">
+			var consts = {{.consts}}
+		</script>
+		<script src="/assets/js/cactus.min.js"></script>
+	</body>
+</html>
