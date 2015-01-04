@@ -238,7 +238,7 @@
 					<input type="file" class="form-control" name="source">
 				</div>
 				<button type="submit" class="btn btn-primary" data-loading-text="Submit..">Submit</button>
-				<% if(checker.language) { %>
+				<% if(checker && checker.language) { %>
 					<br>
 					<small class="small">Submissions are validated using a custom checker</small>
 				<% } %>
