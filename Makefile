@@ -1,6 +1,6 @@
 # Copyright 2014 The Cactus Authors. All rights reserved.
 
-GOFILES = api/account.go api/activity.go api/clarification.go api/contest.go api/execution.go api/notification.go api/problem.go api/session.go api/standing.go api/submission.go belt/belt.go belt/stack-c.go belt/stack-cpp.go belt/stack.go cmd/cactus/main.go cmd/cactus/router.go data/account.go data/blobs.go data/clarification.go data/contest.go data/db.go data/execution.go data/notification.go data/problem.go data/standing.go data/submission.go hub/hub.go ui/assets.go ui/pages.go
+GOFILES = api/account.go api/activity.go api/clarification.go api/contest.go api/execution.go api/notification.go api/problem.go api/session.go api/standing.go api/submission.go belt/belt.go belt/blobs.go belt/execution.go belt/queue-local.go belt/queue-remote.go belt/queue.go belt/stack-c.go belt/stack-cpp.go belt/stack.go belt/submission.go cmd/cactus/main.go cmd/cactus/router.go data/account.go data/blobs.go data/clarification.go data/contest.go data/db.go data/execution.go data/notification.go data/problem.go data/standing.go data/submission.go hub/hub.go rpc/blobs.go rpc/executions.go rpc/problems.go rpc/queue.go rpc/submissions.go ui/assets.go ui/pages.go
 
 CSSFILES = ui/assets/css/animate+animo.css ui/assets/css/bootstrap.css ui/assets/css/fontawesome.css ui/assets/css/hightlight.css ui/assets/css/nprogress.css ui/assets/css/screen.css
 

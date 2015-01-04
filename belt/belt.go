@@ -15,19 +15,16 @@ import (
 	"github.com/hjr265/jail.go/jail"
 
 	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
 )
-
-var chNext = make(chan *data.Execution, 4096)
-
-func Push(exec *data.Execution) {
-	chNext <- exec
-}
 
 func Loop() {
 	for {
 		func() {
-			exec := <-chNext
+			exec, err := Queue.Pop(true)
+			catch(err)
+			if exec == nil {
+				return
+			}
 			defer func() {
 				if err := recover(); err != nil {
 					log.Print(err)
@@ -35,7 +32,6 @@ func Loop() {
 					exec.Status = 6
 					err := exec.Put()
 					catch(err)
-					hub.Send([]interface{}{"SYNC", "executions", exec.Id})
 
 				} else if exec.Apply {
 					subm, err := exec.Submission()
@@ -44,14 +40,14 @@ func Loop() {
 					subm.Apply(exec)
 					err = subm.Put()
 					catch(err)
-					hub.Send([]interface{}{"SYNC", "submissions", subm.Id})
 				}
 			}()
 
+			log.Printf("Processing Execution:%d", exec.Id)
+
 			exec.Status = 1
-			err := exec.Put()
+			err = exec.Put()
 			catch(err)
-			hub.Send([]interface{}{"SYNC", "executions", exec.Id})
 
 			subm, err := exec.Submission()
 			catch(err)
@@ -78,7 +74,7 @@ func Loop() {
 
 				stack := Stacks[prob.Checker.Language]
 
-				sourceBlob, err := data.Blobs.Get(prob.Checker.SourceKey)
+				sourceBlob, err := GetBlob(prob.Checker.SourceKey)
 				catch(err)
 				cmd, err := stack.Build(chkCell, sourceBlob)
 				catch(err)
@@ -93,7 +89,7 @@ func Loop() {
 
 			stack := Stacks[subm.Language]
 
-			sourceBlob, err := data.Blobs.Get(subm.SourceKey)
+			sourceBlob, err := GetBlob(subm.SourceKey)
 			catch(err)
 			cmd, err := stack.Build(cell, sourceBlob)
 			catch(err)
@@ -126,7 +122,6 @@ func Loop() {
 					exec.Status = 7
 					err = exec.Put()
 					catch(err)
-					hub.Send([]interface{}{"SYNC", "executions", exec.Id})
 					return
 				}
 			}
@@ -134,10 +129,9 @@ func Loop() {
 			exec.Status = 2
 			err = exec.Put()
 			catch(err)
-			hub.Send([]interface{}{"SYNC", "executions", exec.Id})
 
 			for i, test := range prob.Tests {
-				inBlob, err := data.Blobs.Get(test.InputKey)
+				inBlob, err := GetBlob(test.InputKey)
 				catch(err)
 
 				cmd = stack.Run(cell)
@@ -179,13 +173,13 @@ func Loop() {
 				wg.Wait()
 
 				outKey := fmt.Sprintf("executions:%d:tests:%d:out", exec.Id, i)
-				_, err = data.Blobs.Put(outKey, bytes.NewReader(outBuf.Bytes()))
+				_, err = PutBlob(outKey, bytes.NewReader(outBuf.Bytes()))
 				catch(err)
 
 				diff := 0
 				pts := 0
 				if prob.Checker.Language == "" {
-					ansBlob, err := data.Blobs.Get(test.AnswerKey)
+					ansBlob, err := GetBlob(test.AnswerKey)
 					catch(err)
 					for leftBuf, rightBuf := bufio.NewReader(ansBlob), bufio.NewReader(outBuf); ; {
 						left := []byte{}
@@ -320,7 +314,6 @@ func Loop() {
 
 				err = exec.Put()
 				catch(err)
-				hub.Send([]interface{}{"SYNC", "executions", exec.Id})
 			}
 
 			exec.Verdict = data.Accepted
@@ -334,7 +327,6 @@ func Loop() {
 			exec.Status = 7
 			err = exec.Put()
 			catch(err)
-			hub.Send([]interface{}{"SYNC", "executions", exec.Id})
 		}()
 	}
 }

@@ -40,7 +40,7 @@ func CreateExecution(w http.ResponseWriter, r *http.Request) {
 	err = exec.Put()
 	catch(err)
 
-	belt.Push(exec)
+	belt.Queue.Push(exec)
 
 	err = json.NewEncoder(w).Encode(exec)
 	catch(err)

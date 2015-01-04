@@ -87,7 +87,7 @@ func CreateSubmission(w http.ResponseWriter, r *http.Request) {
 		}
 		err = exec.Put()
 		catch(err)
-		belt.Push(exec)
+		belt.Queue.Push(exec)
 	}
 }
 
@@ -257,7 +257,7 @@ func JudgeSubmission(w http.ResponseWriter, r *http.Request) {
 	err = exec.Put()
 	catch(err)
 
-	belt.Push(exec)
+	belt.Queue.Push(exec)
 
 	err = data.NewActivity(me, fmt.Sprintf("judged submission %d", subm.Id)).Put()
 	catch(err)

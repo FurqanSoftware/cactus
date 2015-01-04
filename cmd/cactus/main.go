@@ -3,9 +3,11 @@
 package main
 
 import (
+	"flag"
 	"io"
 	"log"
 	"net/http"
+	"net/rpc"
 	"os"
 	"os/signal"
 	"runtime"
@@ -14,12 +16,16 @@ import (
 	"github.com/pelletier/go-toml"
 
 	"github.com/hjr265/cactus/belt"
+	_ "github.com/hjr265/cactus/rpc"
 )
 
 var cfg *toml.TomlTree
 
 func main() {
 	runtime.GOMAXPROCS((runtime.NumCPU() + 1) / 2)
+
+	configName := flag.String("c", "config.tml", "")
+	flag.Parse()
 
 	_, err := os.Stat("config.tml")
 	if os.IsNotExist(err) {
@@ -36,19 +42,29 @@ func main() {
 		catch(err)
 	}
 
-	cfg, err = toml.LoadFile("config.tml")
+	cfg, err = toml.LoadFile(*configName)
 	catch(err)
 
-	go func() {
-		addr, ok := cfg.Get("core.addr").(string)
-		if !ok {
-			log.Fatal("Missing core.addr in config.tml")
-		}
+	if flag.Arg(0) != "belt" {
+		rpc.HandleHTTP()
 
-		log.Printf("Listening on %s", addr)
-		err := http.ListenAndServe(addr, nil)
+		go func() {
+			addr, ok := cfg.Get("core.addr").(string)
+			if !ok {
+				log.Fatal("Missing core.addr in config.tml")
+			}
+
+			log.Printf("Listening on %s", addr)
+			err := http.ListenAndServe(addr, nil)
+			catch(err)
+		}()
+
+		belt.Queue = belt.NewLocalQueue()
+
+	} else {
+		belt.Queue, err = belt.NewRemoteQueue(flag.Arg(1))
 		catch(err)
-	}()
+	}
 
 	beltSize, ok := cfg.Get("belt.size").(int64)
 	if !ok {
