@@ -9,10 +9,8 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-	"sync"
-	"time"
 
-	"github.com/hjr265/jail.go/jail"
+	"github.com/hjr265/cactus/cube"
 
 	"github.com/hjr265/cactus/data"
 )
@@ -27,6 +25,7 @@ func Loop() {
 			}
 			defer func() {
 				if err := recover(); err != nil {
+					panic(err)
 					log.Print(err)
 
 					exec.Status = 6
@@ -54,35 +53,29 @@ func Loop() {
 			prob, err := subm.Problem()
 			catch(err)
 
-			dir, err := ioutil.TempDir("", "")
+			runCube, err := cube.New()
 			catch(err)
-			cell := &jail.Cell{
-				Dir: dir,
-			}
 			defer func() {
-				err := cell.Dispose()
+				err := runCube.Dispose()
 				trace(err)
 			}()
 
-			var chkCell *jail.Cell
+			var chkCube cube.Cube
 			if prob.Checker.Language != "" {
-				dir, err := ioutil.TempDir("", "")
+				chkCube, err = cube.New()
 				catch(err)
-				chkCell = &jail.Cell{
-					Dir: dir,
-				}
 
 				stack := Stacks[prob.Checker.Language]
 
 				sourceBlob, err := GetBlob(prob.Checker.SourceKey)
 				catch(err)
-				cmd, err := stack.Build(chkCell, sourceBlob)
+				proc, err := stack.Build(chkCube, sourceBlob)
 				catch(err)
 				err = sourceBlob.Close()
 				catch(err)
 
-				if cmd != nil {
-					err = cmd.Run()
+				if proc != nil {
+					err = chkCube.Execute(proc)
 					trace(err)
 				}
 			}
@@ -91,31 +84,15 @@ func Loop() {
 
 			sourceBlob, err := GetBlob(subm.SourceKey)
 			catch(err)
-			cmd, err := stack.Build(cell, sourceBlob)
+			proc, err := stack.Build(runCube, sourceBlob)
 			catch(err)
 			err = sourceBlob.Close()
 			catch(err)
 
-			if cmd != nil {
-				wg := sync.WaitGroup{}
-
-				stderr, err := cmd.StderrPipe()
-				catch(err)
-				buildErrBuf := &bytes.Buffer{}
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-
-					_, err := io.Copy(buildErrBuf, stderr)
-					trace(err)
-					err = stderr.Close()
-					trace(err)
-				}()
-
-				err = cmd.Run()
-				wg.Wait()
-				if err != nil {
-					exec.Build.Error = buildErrBuf.String()
+			if proc != nil {
+				err = runCube.Execute(proc)
+				if err != nil || !proc.Success {
+					exec.Build.Error = string(proc.Stderr)
 
 					exec.Verdict = data.CompilationError
 
@@ -134,46 +111,22 @@ func Loop() {
 				inBlob, err := GetBlob(test.InputKey)
 				catch(err)
 
-				cmd = stack.Run(cell)
+				proc = stack.Run(runCube)
 				catch(err)
-				cmd.Limits.Cpu = time.Duration(prob.Limits.Cpu) * time.Second
-				cmd.Limits.Memory = uint64(prob.Limits.Memory)
 
-				wg := sync.WaitGroup{}
-
-				stdin, err := cmd.StdinPipe()
+				proc.Stdin, err = ioutil.ReadAll(inBlob)
 				catch(err)
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-
-					_, err := io.Copy(stdin, inBlob)
-					trace(err)
-					err = inBlob.Close()
-					trace(err)
-					err = stdin.Close()
-					trace(err)
-				}()
-
-				stdout, err := cmd.StdoutPipe()
+				err = inBlob.Close()
 				catch(err)
-				outBuf := &bytes.Buffer{}
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
 
-					_, err := io.Copy(outBuf, stdout)
-					trace(err)
-					err = stdout.Close()
-					trace(err)
-				}()
+				proc.Limits.Cpu = prob.Limits.Cpu
+				proc.Limits.Memory = prob.Limits.Memory
 
-				err = cmd.Run()
-				trace(err)
-				wg.Wait()
+				err = runCube.Execute(proc)
+				catch(err)
 
 				outKey := fmt.Sprintf("executions:%d:tests:%d:out", exec.Id, i)
-				_, err = PutBlob(outKey, bytes.NewReader(outBuf.Bytes()))
+				_, err = PutBlob(outKey, bytes.NewReader(proc.Stdout))
 				catch(err)
 
 				diff := 0
@@ -181,7 +134,7 @@ func Loop() {
 				if prob.Checker.Language == "" {
 					ansBlob, err := GetBlob(test.AnswerKey)
 					catch(err)
-					for leftBuf, rightBuf := bufio.NewReader(ansBlob), bufio.NewReader(outBuf); ; {
+					for leftBuf, rightBuf := bufio.NewReader(ansBlob), bufio.NewReader(bytes.NewReader(proc.Stdout)); ; {
 						left := []byte{}
 						leftEof := false
 						for {
@@ -225,59 +178,32 @@ func Loop() {
 				} else {
 					stack := Stacks[prob.Checker.Language]
 
-					cmd = stack.Run(chkCell)
+					chkProc := stack.Run(chkCube)
 					catch(err)
-					cmd.Limits.Cpu = 16 * time.Second
-					cmd.Limits.Memory = 1 << 30
 
-					wg := sync.WaitGroup{}
+					chkProc.Stdin = proc.Stdout
 
-					stdin, err := cmd.StdinPipe()
+					chkProc.Limits.Cpu = 16
+					chkProc.Limits.Memory = 1024
+
+					err = chkCube.Execute(chkProc)
 					catch(err)
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
 
-						_, err := io.Copy(stdin, outBuf)
-						trace(err)
-						err = stdin.Close()
-						trace(err)
-					}()
-
-					stdout, err := cmd.StdoutPipe()
-					catch(err)
-					chkBuf := &bytes.Buffer{}
-					wg.Add(1)
-					go func() {
-						defer wg.Done()
-
-						_, err := io.Copy(chkBuf, stdout)
-						trace(err)
-						err = stdout.Close()
-						trace(err)
-					}()
-
-					err = cmd.Run()
-					catch(err)
-					wg.Wait()
-
-					n, _ := fmt.Fscanf(chkBuf, "%d %d", &diff, &pts)
+					n, _ := fmt.Fscanf(bytes.NewReader(chkProc.Stdout), "%d %d", &diff, &pts)
 					if n == 0 {
 						diff = 1
 					}
 				}
 
 				verdict := data.Verdict(0)
-				cpu := float64(cmd.Usages.Cpu/1e6) / 1e3
-				memory := int(cmd.Usages.Memory / (1 << 20))
 				switch {
-				case cpu > prob.Limits.Cpu:
+				case proc.Usages.Cpu > prob.Limits.Cpu:
 					verdict = data.CpuLimitExceeded
-					cpu = prob.Limits.Cpu
+					proc.Usages.Cpu = prob.Limits.Cpu
 
-				case memory > prob.Limits.Memory:
+				case proc.Usages.Memory > prob.Limits.Memory:
 					verdict = data.MemoryLimitExceeded
-					memory = prob.Limits.Memory
+					proc.Usages.Memory = prob.Limits.Memory
 
 				case diff == 0:
 					verdict = data.Accepted
@@ -306,8 +232,8 @@ func Loop() {
 						Cpu    float64 `json:"cpu"`
 						Memory int     `json:"memory"`
 					}{
-						Cpu:    cpu,
-						Memory: memory,
+						Cpu:    proc.Usages.Cpu,
+						Memory: proc.Usages.Memory,
 					},
 					Points: pts,
 				})

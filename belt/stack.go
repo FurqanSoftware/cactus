@@ -5,12 +5,12 @@ package belt
 import (
 	"io"
 
-	"github.com/hjr265/jail.go/jail"
+	"github.com/hjr265/cactus/cube"
 )
 
 type Stack interface {
-	Build(cell *jail.Cell, source io.Reader) (*jail.Cmd, error)
-	Run(cell *jail.Cell) *jail.Cmd
+	Build(cube.Cube, io.Reader) (*cube.Process, error)
+	Run(cube.Cube) *cube.Process
 }
 
 var Stacks = map[string]Stack{

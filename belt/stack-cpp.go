@@ -4,34 +4,31 @@ package belt
 
 import (
 	"io"
-	"time"
 
-	"github.com/hjr265/jail.go/jail"
+	"github.com/hjr265/cactus/cube"
 )
 
 type StackCpp struct{}
 
-func (s *StackCpp) Build(cell *jail.Cell, source io.Reader) (*jail.Cmd, error) {
-	f, err := cell.Create("source.cpp")
-	if err != nil {
-		return nil, err
-	}
-	_, err = io.Copy(f, source)
-	if err != nil {
-		return nil, err
-	}
-	err = f.Close()
+func (s *StackCpp) Build(runCube cube.Cube, source io.Reader) (*cube.Process, error) {
+	err := runCube.Create("source.cpp", source)
 	if err != nil {
 		return nil, err
 	}
 
-	cmd := cell.Command("g++", "source.cpp")
-	cmd.Limits.Cpu = 16 * time.Second
-	cmd.Limits.Memory = 1 << 30
-
-	return cmd, nil
+	return &cube.Process{
+		Name: "g++",
+		Args: []string{"source.cpp"},
+		Limits: cube.Limits{
+			Cpu:    16,
+			Memory: 1024,
+		},
+	}, nil
 }
 
-func (s *StackCpp) Run(cell *jail.Cell) *jail.Cmd {
-	return cell.Command("./a.out")
+func (s *StackCpp) Run(runCube cube.Cube) *cube.Process {
+	return &cube.Process{
+		Name: "./a.out",
+		Args: []string{},
+	}
 }

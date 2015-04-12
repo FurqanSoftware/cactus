@@ -16,6 +16,7 @@ import (
 	"github.com/pelletier/go-toml"
 
 	"github.com/hjr265/cactus/belt"
+	"github.com/hjr265/cactus/cube"
 	_ "github.com/hjr265/cactus/rpc"
 )
 
@@ -66,6 +67,10 @@ func main() {
 		catch(err)
 	}
 
+	if cube.DockerExe != "" {
+		log.Print("Docker detected")
+	}
+
 	beltSize, ok := cfg.Get("belt.size").(int64)
 	if !ok {
 		log.Fatal("Missing belt.size in config.tml")
@@ -83,5 +88,11 @@ func main() {
 func catch(err error) {
 	if err != nil {
 		panic(err)
+	}
+}
+
+func trace(err error) {
+	if err != nil {
+		log.Print(err)
 	}
 }
