@@ -883,10 +883,10 @@
 						<tr>
 							<% if(test[1]) { %>
 								<td class="text-center">
-									<% if((me.level != {{.consts.Judge}} || me.level != {{.consts.Administrator}}) && author && me.id != author.id) { %>
-										<%- i+1 %>
-									<% } else { %>
+									<% if(me.level == {{.consts.Judge}} || me.level == {{.consts.Administrator}}) { %>
 										<a href="#compare-<%- i+1 %>"><%- i+1 %></a>
+									<% } else { %>
+										<%- i+1 %>
 									<% } %>
 								</td>
 								<td><%- test[1].usages.cpu %>s</td>
