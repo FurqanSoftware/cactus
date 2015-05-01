@@ -105,8 +105,6 @@ func (s *Docker) Execute(proc *Process) error {
 }
 
 func (s *Docker) Dispose() error {
-	return nil
-
 	err := s.Call("Cubed.Dispose", 0, new(int))
 	if err != nil {
 		return err
