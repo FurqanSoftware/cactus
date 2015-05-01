@@ -2149,6 +2149,10 @@
 				me: Account.me.toJSON(),
 				problems: Problem.all.toJSON()
 			})))
+
+			this.$('td .label-group').tooltip({
+				placement: 'left'
+			})
 		}
 	})
 

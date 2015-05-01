@@ -727,8 +727,8 @@
 			<% _.each(problems, function(prob) { %>
 				<td>
 					<% if(attempts[prob.id] && (attempts[prob.id].tries+attempts[prob.id].extras) > 0) { %>
-						<span class="label-group">
-							<span class="label label-<%- attempts[prob.id].perfect ? 'info' : 'warning' %>"><%- attempts[prob.id].score %></span><span class="label label-default"><%- attempts[prob.id].penalty %> (<%- attempts[prob.id].tries %>)</span>
+						<span class="label-group" title="<%- attempts[prob.id].score %>/<%- _.reduce(prob.tests, function(memo, test) { return memo+test.points }, 0) %>, <%- attempts[prob.id].penalty %> (<%- attempts[prob.id].tries %>+<%- attempts[prob.id].extras %>)">
+							<span class="label label-<%- attempts[prob.id].perfect ? 'info' : 'warning' %>"><%- attempts[prob.id].score %></span><span class="label label-default"><%- attempts[prob.id].penalty %> (<%- attempts[prob.id].tries + attempts[prob.id].extras %>)</span>
 						</span>
 					<% } %>
 				</td>
