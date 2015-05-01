@@ -140,23 +140,46 @@ func (d *Cubed) Execute(args *CubedExecuteArgs, reply *CubedExecuteReply) error 
 		return errno
 	}
 
-	state, err := proc.Wait()
-	if err != nil {
-		return err
+	chWait := make(chan *os.ProcessState)
+	go func() {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		state, err := proc.Wait()
+		trace(err)
+
+		for _, f := range files {
+			f.Close()
+		}
+
+		chWait <- state
+		close(chWait)
+	}()
+
+	*reply = CubedExecuteReply{}
+
+	select {
+	case state := <-chWait:
+		reply.Success = state.Success()
+		reply.UsageCpu = (state.SystemTime() + state.UserTime()).Seconds()
+		reply.UsageMemory = int(state.SysUsage().(*syscall.Rusage).Maxrss / (1 << 10))
+
+	case <-time.After(time.Duration(args.LimitCpu*1.5+5) * time.Second):
+		err = proc.Kill()
+		trace(err)
+
+		state := <-chWait
+
+		reply.Success = false
+		reply.UsageCpu = args.LimitCpu + 1
+		reply.UsageMemory = int(state.SysUsage().(*syscall.Rusage).Maxrss / (1 << 10))
 	}
 
-	for _, f := range files {
-		f.Close()
-	}
 	wg.Wait()
 
-	*reply = CubedExecuteReply{
-		Stdout:      stdoutBuf.Bytes(),
-		Stderr:      stderrBuf.Bytes(),
-		UsageCpu:    (state.SystemTime() + state.UserTime()).Seconds(),
-		UsageMemory: int(state.SysUsage().(*syscall.Rusage).Maxrss / (1 << 10)),
-		Success:     state.Success(),
-	}
+	reply.Stdout = stdoutBuf.Bytes()
+	reply.Stderr = stderrBuf.Bytes()
+
 	return nil
 }
 
