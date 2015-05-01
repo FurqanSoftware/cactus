@@ -3249,6 +3249,10 @@
 
 
 	var main = _.after(2, function() {
+		$.ajaxSetup({
+			cache: false
+		})
+
 		Backbone.history.start({
 			pushState: true
 		})
