@@ -279,6 +279,12 @@ func DeleteProblem(w http.ResponseWriter, r *http.Request) {
 }
 
 func ServeProblemTestAnswer(w http.ResponseWriter, r *http.Request) {
+	me, _ := context.Get(r, "me").(*data.Account)
+	if me == nil || (me.Level != data.Judge && me.Level != data.Administrator) {
+		http.Error(w, "", http.StatusForbidden)
+		return
+	}
+
 	vars := mux.Vars(r)
 
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
