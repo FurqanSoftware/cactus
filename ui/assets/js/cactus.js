@@ -976,7 +976,8 @@
 			},
 			languages: [],
 			tests: [],
-			scoring: ''
+			scoring: '',
+			attempt: null
 		},
 		urlRoot:  '/api/problems'
 	})
