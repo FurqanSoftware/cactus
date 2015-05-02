@@ -38,6 +38,7 @@ type Problem struct {
 	Limits struct {
 		Cpu    float64 `json:"cpu"`
 		Memory int     `json:"memory"`
+		Source int     `json:"source"`
 	} `json:"limits"`
 
 	Languages []string `json:"languages"`

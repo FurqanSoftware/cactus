@@ -1654,6 +1654,10 @@
 					})
 					return
 				}
+				if(file.size > this.model.get('limits').source*1024) {
+					bootbox.alert('Your source size ('+numeral(file.size).format('0.0b')+') exceeds the limit by '+numeral(file.size-this.model.get('limits').source*1024).format('0.0b'))
+					return
+				}
 
 				reader.onload = _.bind(function(event) {
 					var subm = new Submission({
