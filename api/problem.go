@@ -31,7 +31,25 @@ func ServeProblemList(w http.ResponseWriter, r *http.Request) {
 
 	probs, err := data.ListProblems()
 	catch(err)
-	err = json.NewEncoder(w).Encode(probs)
+
+	stnd, err := data.GetStandingByAuthor(me)
+	catch(err)
+
+	probs2 := []struct {
+		*data.Problem
+		Attempt *data.Attempt `json:"attempt"`
+	}{}
+	for _, prob := range probs {
+		probs2 = append(probs2, struct {
+			*data.Problem
+			Attempt *data.Attempt `json:"attempt"`
+		}{
+			Problem: prob,
+			Attempt: stnd.Attempts[strconv.FormatInt(prob.Id, 10)],
+		})
+	}
+
+	err = json.NewEncoder(w).Encode(probs2)
 	catch(err)
 }
 

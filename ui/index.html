@@ -130,6 +130,9 @@
 
 		<script type="text/template" id="tplProblemListItem">
 			<span class="h2 pull-left text-center" style="width: 24px; margin: 0 15px 0 0; line-height: 40px;"><%- char.toUpperCase() %></span>
+			<% if(attempt && (attempt.tries+attempt.extras) > 0) { %>
+				<span class="label <%- attempt.perfect ? 'label-success' : 'label-warning' %>" title="<%- attempt.score %>/<%- _.reduce(tests, function(memo, test) { return memo+test.points }, 0) %>, <%- attempt.penalty %> (<%- attempt.tries %>+<%- attempt.extras %>)" style="position: absolute; top: 10px; right: 10px;">&nbsp;</span>
+			<% } %>
 			<h4 class="list-group-item-heading"><%- title %></h4>
 			<p class="list-group-item-text">Score: <%- _.reduce(tests, function(memo, test) { return memo+test.points }, 0) %></p>
 		</script>

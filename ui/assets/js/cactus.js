@@ -1560,6 +1560,10 @@
 			.addClass('list-group-item')
 			.attr('href', '/p/'+this.model.get('slug'))
 			.html(this.template(this.model.toJSON()))
+
+			this.$('.label').tooltip({
+				placement: 'left'
+			})
 		}
 	})
 
