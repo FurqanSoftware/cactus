@@ -1633,7 +1633,7 @@
 				me: Account.me.toJSON()
 			})))
 
-			this.$('h2 sup').tooltip({
+			this.$('h2 sup, h2 + .small span').tooltip({
 				placement: 'right'
 			})
 		}

@@ -181,7 +181,7 @@
 			<% } %>
 			<h2><%- char.toUpperCase() %>. <%- title %></h2>
 			<div class="small">
-				CPU: <%- limits.cpu %>s, Memory: <%- limits.memory %>MB, Source: <%- limits.source %>KB
+				<span>Score: <%- _.reduce(tests, function(memo, test) { return memo+test.points }, 0) %></span>&nbsp;&nbsp;&nbsp;&nbsp; <span title="CPU: <%- limits.cpu %>s, Memory: <%- limits.memory %>MB, Source: <%- limits.source %>KB">Limits: <%- limits.cpu %>s, <%- limits.memory %>MB</span>
 			</div>
 			<br>
 
