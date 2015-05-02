@@ -2657,7 +2657,6 @@
 			})))
 
 			this.$('pre').on('scroll', _.bind(function(event) {
-				console.log(event)
 				this.$('pre').not(event.target).scrollTop($(event.target).scrollTop())
 			}, this))
 		}
