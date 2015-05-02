@@ -802,14 +802,14 @@
 				<% if(manual) { %>
 					-
 				<% } else { %>
-					<%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.cpu) }, 0) %>s
+					<%- numeral(_.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.cpu) }, 0)).format('0,0.0') %>s
 				<% } %>
 			</td>
 			<td>
 				<% if(manual) { %>
 					-
 				<% } else { %>
-					<%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.memory) }, 0) %>MB
+					<%- numeral(_.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.memory) }, 0)).format('0,0') %>MB
 				<% } %>
 			</td>
 			<td class="text-right">
@@ -892,8 +892,8 @@
 										<%- i+1 %>
 									<% } %>
 								</td>
-								<td><%- test[1].usages.cpu %>s</td>
-								<td><%- test[1].usages.memory %>MB</td>
+								<td><%- numeral(test[1].usages.cpu).format('0,0.0') %>s</td>
+								<td><%- numeral(test[1].usages.memory).format('0,0') %>MB</td>
 								<td><%- test[1].difference %></td>
 								<td><%- test[1].points %></td>
 								<td class="text-right">
@@ -952,11 +952,11 @@
 								<form>
 									<p class="row">
 										<div class="col-md-4"><b>CPU</b></div>
-										<div class="col-md-8 text-right"><%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.cpu) }, 0) %>s</div>
+										<div class="col-md-8 text-right"><%- numeral(_.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.cpu) }, 0)).format('0,0.0') %>s</div>
 									</p>
 									<p class="row">
 										<div class="col-md-4"><b>Memory</b></div>
-										<div class="col-md-8 text-right"><%- _.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.memory) }, 0) %>MB</div>
+										<div class="col-md-8 text-right"><%- numeral(_.reduce(tests||[], function(memo, test) { return Math.max(memo, test.usages.memory) }, 0)).format('0,0') %>MB</div>
 									</p>
 									<p class="row">
 										<div class="col-md-4"><b>Verdict</b></div>
@@ -1023,8 +1023,8 @@
 											<tr>
 												<% if(test[1]) { %>
 													<td class="text-center"><a href="#compare-<%- i+1 %>"><%- i+1 %></a></td>
-													<td><%- test[1].usages.cpu %>s</td>
-													<td><%- test[1].usages.memory %>MB</td>
+													<td><%- numeral(test[1].usages.cpu).format('0,0.0') %>s</td>
+													<td><%- numeral(test[1].usages.memory).format('0,0') %>MB</td>
 													<td><%- test[1].difference %></td>
 													<td><%- test[1].points %></td>
 													<td class="text-right">
