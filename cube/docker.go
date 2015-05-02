@@ -17,7 +17,8 @@ import (
 )
 
 var (
-	DockerExe = ""
+	DockerExe   = ""
+	DockerImage = ""
 
 	cubedHost = "localhost"
 	cubedDir  = ""
@@ -30,7 +31,7 @@ type Docker struct {
 }
 
 func (s *Docker) Init() error {
-	cmd := exec.Command("docker", "run", "--cap-add=SETUID", "--cap-add=SETGID", "--detach=true", "--expose=31337", "--interactive=true", "--publish=31337", "--volume="+cubedDir+":/root", "--workdir=/root", "--user=root", "tophws/cactus-cube", "go", "run", "cubed.go")
+	cmd := exec.Command("docker", "run", "--cap-add=SETUID", "--cap-add=SETGID", "--detach=true", "--expose=31337", "--interactive=true", "--publish=31337", "--volume="+cubedDir+":/root", "--workdir=/root", "--user=root", DockerImage, "go", "run", "cubed.go")
 	out, err := cmd.Output()
 	if err != nil {
 		return err

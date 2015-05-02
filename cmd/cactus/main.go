@@ -69,6 +69,12 @@ func main() {
 
 	if cube.DockerExe != "" {
 		log.Print("Docker detected")
+
+		image, ok := cfg.Get("cube.docker.image").(string)
+		if !ok {
+			log.Fatal("Missing cube.docker.image in config.tml")
+		}
+		cube.DockerImage = image
 	}
 
 	beltSize, ok := cfg.Get("belt.size").(int64)

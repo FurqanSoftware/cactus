@@ -3,3 +3,6 @@ addr = ":5050"
 
 [belt]
 size = 2
+
+[cube.docker]
+image = "tophws/cactus-cube"
