@@ -1631,6 +1631,7 @@
 					input: showdown.makeHtml(this.model.get('statement').input||''),
 					output: showdown.makeHtml(this.model.get('statement').output||'')
 				},
+				notes: showdown.makeHtml(this.model.get('notes')||''),
 				me: Account.me.toJSON()
 			})))
 
