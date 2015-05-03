@@ -224,6 +224,15 @@ func init() {
 		Handler(handleIdentity(http.HandlerFunc(api.ServeNotificationList)))
 
 	r.NewRoute().
+		Methods("POST").
+		Path("/api/uploads").
+		Handler(handleIdentity(http.HandlerFunc(api.CreateUpload)))
+	r.NewRoute().
+		Methods("GET").
+		Path("/api/uploads/{kind:[a-z]+}-{id}").
+		Handler(handleIdentity(http.HandlerFunc(api.ServeUpload)))
+
+	r.NewRoute().
 		Methods("GET").
 		PathPrefix("/api").
 		Handler(http.NotFoundHandler())

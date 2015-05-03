@@ -205,6 +205,12 @@ footer {
     z-index: 4;
 }
 
+.panel .panel-body p > img {
+    display: block;
+    margin: 0 auto 8px;
+    max-width: 100%;
+}
+
 .modal {
     overflow: auto;
 }
@@ -221,6 +227,14 @@ footer {
 }
 .label-group .label:last-child {
     border-radius: 0 1px 1px 0;
+}
+
+.form-group textarea ~ .small {
+    margin: 4px 0 -4px 4px;
+}
+.form-group textarea ~ .small .btn-upload-image + input {
+    position: absolute;
+    top: -9999em;
 }
 
 .dropdown-menu.list-group {

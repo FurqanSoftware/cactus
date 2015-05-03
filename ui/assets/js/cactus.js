@@ -1838,6 +1838,35 @@
 
 			'click .btn-delete-fieldset': function(event) {
 				$(event.target).closest('fieldset').detach();
+			},
+
+			'click .btn-upload-image': function(event) {
+				$(event.target).next('input[type=file]')[0].click()
+			},
+
+			'change .btn-upload-image + input[type=file]': function(event) {
+				var file = event.target.files[0]
+				if(!file) {
+					return
+				}
+
+				var $textarea = $(event.target).closest('.form-group').find('textarea')
+				$textarea.val($textarea.val().substr(0, $textarea[0].selectionStart)+'![Uploading..]()'+$textarea.val().substr($textarea[0].selectionStart))
+
+				var data = new FormData()
+				data.append('kind', 'image')
+				data.append('file', file)
+				$.ajax({
+					type: 'POST',
+					url: '/api/uploads',
+					data: data,
+					processData: false,
+					contentType: false,
+					dataType: 'json'
+				})
+				.success(function(key) {
+					$textarea.val($textarea.val().replace('![Uploading..]()', '![](/api/uploads/'+key+')'))
+				})
 			}
 		},
 
