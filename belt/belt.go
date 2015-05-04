@@ -61,13 +61,17 @@ func Loop() {
 			}()
 
 			var chkCube cube.Cube
-			if prob.Checker.Language != "" {
+			if prob.Checker.LanguageId != 0 {
 				chkCube, err = cube.New()
 				catch(err)
 
-				stack := Stacks[prob.Checker.Language]
+				lang, err := prob.CheckerLanguage()
+				catch(err)
+				stack := &Stack{}
+				stack.Language = lang
+				stack.Source.Name = ""
 
-				sourceBlob, err := GetBlob(prob.Checker.SourceKey)
+				sourceBlob, err := GetBlob(prob.Checker.Source.Key)
 				catch(err)
 				proc, err := stack.Build(chkCube, sourceBlob)
 				catch(err)
@@ -80,9 +84,13 @@ func Loop() {
 				}
 			}
 
-			stack := Stacks[subm.Language]
+			lang, err := subm.Language()
+			catch(err)
+			stack := &Stack{}
+			stack.Language = lang
+			stack.Source.Name = subm.Source.Name
 
-			sourceBlob, err := GetBlob(subm.SourceKey)
+			sourceBlob, err := GetBlob(subm.Source.Key)
 			catch(err)
 			proc, err := stack.Build(runCube, sourceBlob)
 			catch(err)
@@ -108,7 +116,7 @@ func Loop() {
 			catch(err)
 
 			for i, test := range prob.Tests {
-				inBlob, err := GetBlob(test.InputKey)
+				inBlob, err := GetBlob(test.Input.Key)
 				catch(err)
 
 				proc = stack.Run(runCube)
@@ -131,8 +139,8 @@ func Loop() {
 
 				diff := 0
 				pts := 0
-				if prob.Checker.Language == "" {
-					ansBlob, err := GetBlob(test.AnswerKey)
+				if prob.Checker.LanguageId == 0 {
+					ansBlob, err := GetBlob(test.Answer.Key)
 					catch(err)
 					for leftBuf, rightBuf := bufio.NewReader(ansBlob), bufio.NewReader(bytes.NewReader(proc.Stdout)); ; {
 						left := []byte{}
@@ -176,7 +184,11 @@ func Loop() {
 					}
 
 				} else {
-					stack := Stacks[prob.Checker.Language]
+					lang, err := prob.CheckerLanguage()
+					catch(err)
+					stack := &Stack{}
+					stack.Language = lang
+					stack.Source.Name = ""
 
 					chkProc := stack.Run(chkCube)
 					catch(err)
@@ -207,7 +219,7 @@ func Loop() {
 
 				case diff == 0:
 					verdict = data.Accepted
-					if prob.Checker.Language == "" {
+					if prob.Checker.LanguageId == 0 {
 						pts = test.Points
 					}
 

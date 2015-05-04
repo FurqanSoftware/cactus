@@ -11,10 +11,14 @@ type Submission struct {
 	*data.Submission
 }
 
-func (s *Submission) Problem() (*data.Problem, error) {
+func (s *Submission) Problem() (*Problem, error) {
 	switch Queue := Queue.(type) {
 	case *LocalQueue:
-		return s.Submission.Problem()
+		prob, err := s.Submission.Problem()
+		if err != nil {
+			return nil, err
+		}
+		return &Problem{prob}, nil
 
 	case *RemoteQueue:
 		prob := data.Problem{}
@@ -22,7 +26,24 @@ func (s *Submission) Problem() (*data.Problem, error) {
 		if err != nil {
 			return nil, err
 		}
-		return &prob, nil
+		return &Problem{&prob}, nil
+	}
+
+	panic("unreachable")
+}
+
+func (s *Submission) Language() (*data.Language, error) {
+	switch Queue := Queue.(type) {
+	case *LocalQueue:
+		return s.Submission.Language()
+
+	case *RemoteQueue:
+		lang := data.Language{}
+		err := Queue.c.Call("Languages.Get", s.Submission.LanguageId, &lang)
+		if err != nil {
+			return nil, err
+		}
+		return &lang, nil
 	}
 
 	panic("unreachable")

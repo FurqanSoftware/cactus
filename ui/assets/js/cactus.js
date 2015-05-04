@@ -110,6 +110,17 @@
 								}
 							}
 							break
+
+						case 'languages':
+							if(typeof data[2] === 'undefined') {
+								Language.all.fetch()
+							} else {
+								var lang = Language.all.get(data[2])
+								if(lang) {
+									lang.fetch()
+								}
+							}
+							break
 					}
 					break
 			}
@@ -297,6 +308,8 @@
 				}), {
 					panel: true
 				})
+
+				Language.all.fetch()
 			}, {
 				login: true
 			}),
@@ -328,6 +341,8 @@
 				}), {
 					panel: true
 				})
+
+				Language.all.fetch()
 			}, {
 				login: true
 			}),
@@ -481,6 +496,7 @@
 
 				Account.all.fetch()
 				Problem.all.fetch()
+				Language.all.fetch()
 			}, {
 				login: true
 			}),
@@ -526,6 +542,8 @@
 						panel: true
 					})
 				}
+
+				Language.all.fetch()
 			}, {
 				login: true
 			}),
@@ -661,12 +679,32 @@
 					layout: 'two'
 				})
 
-				content.column('main').append(new Settings({
+				var settGeneral = new SettingsGeneral({
 					model: Contest.one
+				})
+				var settLangs = new SettingsLanguages({
+					collection: Language.all
+				})
+
+				content.column('main').append(new SettingsTabbar({
+					others: [
+						settGeneral,
+						settLangs
+					]
 				}), {
 					panel: true
 				})
+
+				content.column('main').append(settGeneral, {
+					panel: true
+				})
 				Contest.one.fetch()
+
+				content.column('main').append(settLangs, {
+					panel: true,
+					hidden: true
+				})
+				Language.all.fetch()
 			}, {
 				login: true
 			}),
@@ -974,7 +1012,7 @@
 				cpu: 0,
 				memory: 0
 			},
-			languages: [],
+			languageIds: [],
 			tests: [],
 			scoring: '',
 			attempt: null
@@ -1089,7 +1127,7 @@
 		defaults: {
 			authorId: 0,
 			problemId: 0,
-			language: '',
+			languageId: 0,
 			manual: false,
 			verdict: 0,
 			tests: null,
@@ -1142,6 +1180,27 @@
 
 	_.extend(Execution, {
 		all: new Executions()
+	})
+
+
+	var Language = Model.extend({
+		defaults: {
+			label: '',
+			steps: {}
+		},
+		urlRoot: '/api/languages'
+	})
+
+	var Languages = Collection.extend({
+		model: Language,
+		url: '/api/languages',
+		comparator: function(lang) {
+			return lang.get('label').toLowerCase()
+		}
+	})
+
+	_.extend(Language, {
+		all: new Languages()
 	})
 
 
@@ -1314,6 +1373,7 @@
 					this.$('#'+name).append($('<div></div>')
 						.toggleClass('panel panel-default', options.panel || false)
 						.toggleClass('table-responsive', options.panel && options.table || false)
+						.toggle(!options.hidden)
 						.append(el)
 						.animo({
 							animation: options.animo ? options.animo.animation : 'fadeIn',
@@ -1664,8 +1724,11 @@
 				reader.onload = _.bind(function(event) {
 					var subm = new Submission({
 						problemId: this.model.get('id'),
-						language: this.$('select[name=language]').val(),
-						source: reader.result
+						languageId: parseInt(this.$('select[name=languageId]').val()),
+						source: {
+							name: file.name,
+							body: btoa(reader.result)
+						}
 					})
 					subm.save({}, {
 						success: function() {
@@ -1681,13 +1744,20 @@
 
 		initialize: function() {
 			this.listenTo(this.model, 'change', _.debounce(_.bind(this.render, this), 125))
+			this.listenTo(Language.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
 			this.render()
 		},
 
 		render: function() {
 			this.$el
 			.addClass('panel-body')
-			.html(this.template(this.model.toJSON()))
+			.html(this.template(_.extend(this.model.toJSON(), {
+				languages: _.compact(Language.all.map(_.bind(function(lang) {
+					if(_.contains(this.model.get('languageIds'), lang.id)) {
+						return lang.toJSON()
+					}
+				}, this)))
+			})))
 		}
 	})
 
@@ -1721,6 +1791,16 @@
 								data[key0] = data[key0] || {}
 								data[key0][key1] = val
 							}
+							if(name.match(/^\w+\[\w+\]\[\w+\]$/)) {
+								var parts = name.match(/^(\w+)\[(\w+)\]\[(\w+)\]$/)
+								  , key0 = parts[1]
+								  , key1 = parts[2]
+								  , key2 = parts[3]
+								  , ok = false
+								data[key0] = data[key0] || {}
+								data[key0][key1] = data[key0][key1] || {}
+								data[key0][key1][key2] = val
+							}
 							if(name.match(/^\w+\[\]\[\w+\]$/)) {
 								var parts = name.match(/^(\w+)\[\]\[(\w+)\]$/)
 								  , key0 = parts[1]
@@ -1739,6 +1819,27 @@
 									data[key0].push(node)
 								}
 							}
+							if(name.match(/^\w+\[\]\[\w+\]\[\w+\]$/)) {
+								var parts = name.match(/^(\w+)\[\]\[(\w+)\]\[(\w+)\]$/)
+								  , key0 = parts[1]
+								  , key1 = parts[2]
+								  , key2 = parts[3]
+								  , ok = false
+								data[key0] = data[key0] || []
+								data[key0].each(function(node) {
+									if(!ok && typeof node[key1] === 'undefined') {
+										node[key1] = {}
+										node[key1][key2] = val
+										ok = true
+									}
+								})
+								if(!ok) {
+									var node = {}
+									node[key1] = {}
+									node[key1][key2] = val
+									data[key0].push(node)
+								}
+							}
 
 							next()
 						}
@@ -1754,7 +1855,10 @@
 							}
 
 							reader.onload = _.bind(function(event) {
-								val = reader.result
+								val = {
+									name: file.name,
+									body: btoa(reader.result)
+								}
 								step()
 							}, this)
 							reader.readAsText(file)
@@ -1766,7 +1870,22 @@
 							break
 
 						default:
-							step()
+							switch(name) {
+								case 'checker[languageId]':
+									val = parseInt(val)
+									step()
+									break
+
+								case 'languageIds':
+									val = _.map(val, function(v) {
+										return parseInt(v)
+									})
+									step()
+									break
+
+								default:
+									step()
+							}
 					}
 				}, _.bind(function() {
 					_.each(data, function(val, key) {
@@ -1832,7 +1951,7 @@
 				$el.parent().html('').append($('<input type="file">')
 					.attr('id', $el.attr('id'))
 					.attr('class', $el.attr('class'))
-					.attr('name', $elHidden.attr('name').replace(/Key/, ''))
+					.attr('name', $elHidden.attr('name').replace(/\[key\]$/, ''))
 				)
 				$(event.target).detach()
 			},
@@ -1874,6 +1993,7 @@
 		initialize: function() {
 			this.listenTo(this.model, 'change', _.debounce(_.bind(this.render, this), 125))
 			this.listenTo(Problem.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
+			this.listenTo(Language.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
 			this.render()
 		},
 
@@ -1884,7 +2004,10 @@
 				charsUsed: Problem.all.pluck('char'),
 				specs: _.flatten([this.model.get('specs'), {}]),
 				samples: _.flatten([this.model.get('samples'), {}]),
-				tests: _.flatten([this.model.get('tests'), {}])
+				tests: _.flatten([this.model.get('tests'), {}]),
+				Language: {
+					all: Language.all.toJSON()
+				}
 			})))
 		}
 	})
@@ -2367,6 +2490,7 @@
 			this.filter = options.filter
 
 			this.listenTo(this.model, 'change', _.debounce(_.bind(this.render, this), 125))
+			this.listenTo(Language.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
 			this.render()
 		},
 
@@ -2375,14 +2499,8 @@
 				author: this.model.author() ? this.model.author().toJSON() : null,
 				problem: this.model.problem() ? this.model.problem().toJSON() : null,
 				language: _.bind(function() {
-					switch(this.model.get('language')) {
-						case 'c':
-							return 'C'
-						case 'cpp':
-							return 'C++'
-						case 'java':
-							return 'Java'
-					}
+					var lang = Language.all.get(this.model.get('languageId'))
+					return lang ? lang.get('label') : ''
 				}, this)(),
 				me: Account.me.toJSON(),
 				single: this.single,
@@ -2394,7 +2512,7 @@
 				placement: 'right'
 			})
 
-			if(this.filter && (this.filter.author && this.model.get('authorId') != this.filter.author || this.filter.problem && this.model.get('problemId') != this.filter.problem || this.filter.language && this.model.get('language') != this.filter.language || this.filter.verdict && this.model.get('verdict') != this.filter.verdict)) {
+			if(this.filter && (this.filter.author && this.model.get('authorId') != this.filter.author || this.filter.problem && this.model.get('problemId') != this.filter.problem || this.filter.language && this.model.get('languageId') != this.filter.language || this.filter.verdict && this.model.get('verdict') != this.filter.verdict)) {
 				this.$el.hide()
 			}
 		}
@@ -2425,6 +2543,7 @@
 			this.other = options.other
 			this.listenTo(Account.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
 			this.listenTo(Problem.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
+			this.listenTo(Language.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
 			this.render()
 		},
 
@@ -2433,7 +2552,8 @@
 			.addClass('panel-body')
 			.html(this.template({
 				accounts: Account.all.toJSON(),
-				problems: Problem.all.toJSON()
+				problems: Problem.all.toJSON(),
+				languages: Language.all.toJSON()
 			}))
 		}
 	})
@@ -2481,6 +2601,7 @@
 
 		initialize: function() {
 			this.listenTo(this.model, 'change', _.debounce(_.bind(this.render, this), 125))
+			this.listenTo(Language.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
 			this.render()
 
 			$.get(this.model.url()+'/source')
@@ -2494,7 +2615,10 @@
 			this.$el
 			.addClass('panel-body')
 			.html(this.template(_.extend(this.model.toJSON(), {
-				source: this.model.get('language') ? hljs.highlight(this.model.get('language'), this.source||'').value : ''
+				source: _.bind(function() {
+					var lang = Language.all.get(this.model.get('languageId'))
+					return lang ? hljs.highlightAuto(this.source||'', [lang.get('label').toLowerCase()]).value : ''
+				}, this)()
 			})))
 		}
 	})
@@ -3106,8 +3230,40 @@
 	})
 
 
-	var Settings = View.extend({
-		template: _.template($('#tplSettings').html()),
+	var SettingsTabbar = View.extend({
+		template: _.template($('#tplSettingsTabbar').html()),
+
+		events: {
+			'click .nav-pills li a': function(event) {
+				var $el = $(event.target)
+				$el.parent().addClass('active')
+				.siblings().removeClass('active')
+				var i = $el.parent().index()
+				_.each(this.others, function(other, j) {
+					if(i == j) {
+						other.$el.parent().show()
+						other.render()
+					} else {
+						other.$el.parent().hide()
+					}
+				})
+			}
+		},
+
+		initialize: function(options) {
+			this.others = options.others
+			this.render()
+		},
+
+		render: function() {
+			this.$el
+			.addClass('panel-body')
+			.html(this.template())
+		}
+	})
+
+	var SettingsGeneral = View.extend({
+		template: _.template($('#tplSettingsGeneral').html()),
 
 		events: {
 			'submit form': function(event) {
@@ -3151,6 +3307,127 @@
 			this.$el
 			.addClass('panel-body')
 			.html(this.template(this.model.toJSON()))
+		}
+	})
+
+	var SettingsLanguages = View.extend({
+		template: _.template($('#tplSettingsLanguages').html()),
+
+		events: {
+			'change #inpLanguagePick': function(event) {
+				this.inner.model = this.collection.get($(event.target).val()) || new Language()
+				this.inner.render()
+			}
+		},
+
+		initialize: function() {
+			this.inner = new SettingsLanguagesInner({
+				collection: this.collection
+			})
+
+			this.listenTo(this.collection, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
+			this.render()
+		},
+
+		render: function() {
+			this.$el
+			.addClass('panel-body')
+			.html(this.template({
+				languages: this.collection.toJSON(),
+				picked: this.inner.model
+			}))
+			.append(this.inner.el)
+
+			this.inner.delegateEvents()
+
+			this.$('#inpLanguagePick').trigger('change')
+		}
+	})
+
+	var SettingsLanguagesInner = View.extend({
+		template: _.template($('#tplSettingsLanguagesInner').html()),
+
+		events: {
+			'submit form': function(event) {
+				event.preventDefault()
+				this.$('button[type=submit]').button('loading')
+				var data = {}
+				_.each(this.$('[name]'), function(el) {
+					var $el = $(el)
+					  , name = $el.attr('name')
+					  , val = $el.val()
+					if(name.match(/^\w+$/)) {
+						data[name] = val
+					}
+					if(name.match(/^\w+\[\w+\]$/)) {
+						var parts = name.match(/^(\w+)\[(\w+)\]$/)
+						, key0 = parts[1]
+						, key1 = parts[2]
+						, ok = false
+						data[key0] = data[key0] || {}
+						data[key0][key1] = val
+					}
+				})
+
+				this.model = this.model
+				this.model.set(data, {
+					silent: true
+				})
+				if(this.model.id) {
+					this.model.save({}, {
+						success: _.bind(function() {
+							this.$('button[type=submit]').button('reset')
+						}, this),
+						error: _.bind(function() {
+							this.$('button[type=submit]').button('reset')
+						}, this)
+					})
+
+				} else {
+					this.collection.create(this.model, {
+						wait: true,
+						success: _.bind(function() {
+							this.$('button[type=submit]').button('reset')
+						}, this),
+						error: _.bind(function() {
+							this.$('button[type=submit]').button('reset')
+						}, this)
+					})
+				}
+			},
+
+			'click .btn-delete': function(event) {
+				var $targ = $(event.target)
+				bootbox.confirm($targ.data('confirm-text'), _.bind(function(okay) {
+					if(!okay) {
+						return
+					}
+					this.model.destroy()
+				}, this))
+			},
+
+			'change input[name=label]': function(event) {
+				if(this.model.id) {
+					return
+				}
+				switch($(event.target).val().toLowerCase()) {
+					case 'c':
+						this.$('[name="steps[build]"]').val('gcc ${source.name}')
+						this.$('[name="steps[run]"]').val('./a.out')
+						break
+
+					case 'c++':
+						this.$('[name="steps[build]"]').val('g++ ${source.name}')
+						this.$('[name="steps[run]"]').val('./a.out')
+						break
+				}
+			}
+		},
+
+		render: function() {
+			this.$el.html(this.template(_.extend(this.model.toJSON(), {
+				create: !this.model.id
+			})))
 		}
 	})
 

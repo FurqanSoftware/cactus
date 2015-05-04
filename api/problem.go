@@ -3,6 +3,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -166,22 +167,31 @@ func UpdateProblem(w http.ResponseWriter, r *http.Request) {
 		Notes   string `json:"notes"`
 		Judge   string `json:"judge"`
 		Checker struct {
-			Language  string `json:"language"`
-			Source    string `json:"source"`
-			SourceKey string `json:"sourceKey"`
+			LanguageId int64 `json:"languageId"`
+			Source     struct {
+				Key  string `json:"key"`
+				Name string `json:"name"`
+				Body []byte `json:"body"`
+			} `json:"source"`
 		} `json:"checker"`
 		Limits struct {
 			Cpu    float64 `json:"cpu"`
 			Memory int     `json:"memory"`
 			Source int     `json:"source"`
 		} `json:"limits"`
-		Languages []string `json:"languages"`
-		Tests     []struct {
-			Input     string `json:"input"`
-			InputKey  string `json:"inputKey"`
-			Answer    string `json:"answer"`
-			AnswerKey string `json:"answerKey"`
-			Points    int    `json:"points"`
+		LanguageIds []int64 `json:"languageIds"`
+		Tests       []struct {
+			Input struct {
+				Key  string `json:"key"`
+				Name string `json:"name"`
+				Body []byte `json:"body"`
+			} `json:"input"`
+			Answer struct {
+				Key  string `json:"key"`
+				Name string `json:"name"`
+				Body []byte `json:"body"`
+			} `json:"answer"`
+			Points int `json:"points"`
 		} `json:"tests"`
 		Scoring string `json:"scoring"`
 	}{}
@@ -205,54 +215,59 @@ func UpdateProblem(w http.ResponseWriter, r *http.Request) {
 	prob.Samples = body.Samples
 	prob.Notes = body.Notes
 	prob.Judge = body.Judge
-	if body.Checker.Language != "" {
-		if body.Checker.SourceKey == "" {
-			body.Checker.SourceKey = fmt.Sprintf("problems:%d:checker:source", prob.Id)
-			_, err := data.Blobs.Put(body.Checker.SourceKey, strings.NewReader(body.Checker.Source))
+	if body.Checker.LanguageId != 0 {
+		if body.Checker.Source.Key == "" {
+			body.Checker.Source.Key = fmt.Sprintf("problems:%d:checker:source", prob.Id)
+			_, err := data.Blobs.Put(body.Checker.Source.Key, bytes.NewReader(body.Checker.Source.Body))
 			catch(err)
+			prob.Checker.Source.Name = body.Checker.Source.Name
 		}
-		prob.Checker = struct {
-			Language  string `json:"language"`
-			SourceKey string `json:"sourceKey"`
-		}{
-			Language:  body.Checker.Language,
-			SourceKey: body.Checker.SourceKey,
-		}
-
+		prob.Checker.LanguageId = body.Checker.LanguageId
+		prob.Checker.Source.Key = body.Checker.Source.Key
 	} else {
-		prob.Checker = struct {
-			Language  string `json:"language"`
-			SourceKey string `json:"sourceKey"`
-		}{
-			Language:  "",
-			SourceKey: "",
-		}
+		prob.Checker.LanguageId = 0
+		prob.Checker.Source.Key = ""
 	}
 	prob.Limits = body.Limits
-	prob.Languages = body.Languages
+	prob.LanguageIds = body.LanguageIds
+	names := map[string]string{}
+	for _, test := range prob.Tests {
+		names[test.Input.Key] = test.Input.Name
+		names[test.Answer.Key] = test.Answer.Name
+	}
 	prob.Tests = nil
 	for i, test := range body.Tests {
-		if test.InputKey == "" {
-			test.InputKey = fmt.Sprintf("problems:%d:tests:%d:in", prob.Id, i)
-			_, err := data.Blobs.Put(test.InputKey, strings.NewReader(test.Input))
+		test2 := struct {
+			Input struct {
+				Key  string `json:"key"`
+				Name string `json:"name"`
+			} `json:"input"`
+			Answer struct {
+				Key  string `json:"key"`
+				Name string `json:"name"`
+			} `json:"answer"`
+			Points int `json:"points"`
+		}{}
+		if test.Input.Key == "" {
+			test.Input.Key = fmt.Sprintf("problems:%d:tests:%d:in", prob.Id, i)
+			_, err := data.Blobs.Put(test.Input.Key, bytes.NewReader(test.Input.Body))
 			catch(err)
+			test2.Input.Name = test.Input.Name
+		} else {
+			test2.Input.Name = names[test.Input.Key]
 		}
-
-		if test.AnswerKey == "" {
-			test.AnswerKey = fmt.Sprintf("problems:%d:tests:%d:ans", prob.Id, i)
-			_, err := data.Blobs.Put(test.AnswerKey, strings.NewReader(test.Answer))
+		test2.Input.Key = test.Input.Key
+		if test.Answer.Key == "" {
+			test.Answer.Key = fmt.Sprintf("problems:%d:tests:%d:ans", prob.Id, i)
+			_, err := data.Blobs.Put(test.Answer.Key, bytes.NewReader(test.Answer.Body))
 			catch(err)
+			test2.Answer.Name = test.Answer.Name
+		} else {
+			test2.Answer.Name = names[test.Answer.Key]
 		}
-
-		prob.Tests = append(prob.Tests, struct {
-			InputKey  string `json:"inputKey"`
-			AnswerKey string `json:"answerKey"`
-			Points    int    `json:"points"`
-		}{
-			InputKey:  test.InputKey,
-			AnswerKey: test.AnswerKey,
-			Points:    test.Points,
-		})
+		test2.Answer.Key = test.Answer.Key
+		test2.Points = test.Points
+		prob.Tests = append(prob.Tests, test2)
 	}
 	prob.Scoring = body.Scoring
 	err = prob.Put()
@@ -321,7 +336,7 @@ func ServeProblemTestAnswer(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%s-%d.ans"`, prob.Slug, no))
 	}
 
-	blob, err := data.Blobs.Get(test.AnswerKey)
+	blob, err := data.Blobs.Get(test.Answer.Key)
 	catch(err)
 	_, err = io.Copy(w, blob)
 	catch(err)

@@ -3,6 +3,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -50,9 +51,12 @@ func CreateSubmission(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := struct {
-		ProblemId int64  `json:"problemId"`
-		Language  string `json:"language"`
-		Source    string `json:"source"`
+		ProblemId  int64 `json:"problemId"`
+		LanguageId int64 `json:"languageId"`
+		Source     struct {
+			Name string `json:"name"`
+			Body []byte `json:"body"`
+		} `json:"source"`
 	}{}
 	err := json.NewDecoder(r.Body).Decode(&body)
 	catch(err)
@@ -60,15 +64,15 @@ func CreateSubmission(w http.ResponseWriter, r *http.Request) {
 	prob, err := data.GetProblem(body.ProblemId)
 	catch(err)
 
-	key, err := data.Blobs.Put("", strings.NewReader(body.Source))
+	key, err := data.Blobs.Put("", bytes.NewReader(body.Source.Body))
 	catch(err)
 
-	subm := &data.Submission{
-		AuthorId:  me.Id,
-		ProblemId: prob.Id,
-		Language:  body.Language,
-		SourceKey: string(key),
-	}
+	subm := &data.Submission{}
+	subm.AuthorId = me.Id
+	subm.ProblemId = prob.Id
+	subm.LanguageId = body.LanguageId
+	subm.Source.Key = string(key)
+	subm.Source.Name = body.Source.Name
 	err = subm.Put()
 	catch(err)
 
@@ -167,7 +171,7 @@ func ServeSubmissionSource(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%d-%s-%s.%s"`, subm.Id, acc.Handle, strings.ToLower(prob.Char), subm.Language))
 	}
 
-	blob, err := data.Blobs.Get(subm.SourceKey)
+	blob, err := data.Blobs.Get(subm.Source.Key)
 	catch(err)
 	_, err = io.Copy(w, blob)
 	catch(err)

@@ -31,8 +31,11 @@ type Problem struct {
 	Judge string `json:"judge"`
 
 	Checker struct {
-		Language  string `json:"language"`
-		SourceKey string `json:"sourceKey"`
+		LanguageId int64 `json:"languageId"`
+		Source     struct {
+			Key  string `json:"key"`
+			Name string `json:"name"`
+		} `json:"source"`
 	} `json:"checker"`
 
 	Limits struct {
@@ -41,12 +44,18 @@ type Problem struct {
 		Source int     `json:"source"`
 	} `json:"limits"`
 
-	Languages []string `json:"languages"`
+	LanguageIds []int64 `json:"languageIds"`
 
 	Tests []struct {
-		InputKey  string `json:"inputKey"`
-		AnswerKey string `json:"answerKey"`
-		Points    int    `json:"points"`
+		Input struct {
+			Key  string `json:"key"`
+			Name string `json:"name"`
+		} `json:"input"`
+		Answer struct {
+			Key  string `json:"key"`
+			Name string `json:"name"`
+		} `json:"answer"`
+		Points int `json:"points"`
 	} `json:"tests,omitempty"`
 
 	Scoring string `json:"scoring"`
@@ -117,6 +126,10 @@ func GetProblemBySlug(slug string) (*Problem, error) {
 	}
 	p.Id = id
 	return p, nil
+}
+
+func (p *Problem) CheckerLanguage() (*Language, error) {
+	return GetLanguage(p.Checker.LanguageId)
 }
 
 func (p *Problem) Put() error {

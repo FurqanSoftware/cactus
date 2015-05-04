@@ -225,16 +225,10 @@
 			<h4 style="margin-bottom: 20px;">Submit</h4>
 			<form>
 				<div class="form-group">
-					<select class="form-control" name="language">
-						<% if(_.contains(languages, 'c')) { %>
-							<option value="c">C</option>
-						<% } %>
-						<% if(_.contains(languages, 'cpp')) { %>
-							<option value="cpp">C++</option>
-						<% } %>
-						<% if(_.contains(languages, 'java')) { %>
-							<option value="java">Java</option>
-						<% } %>
+					<select class="form-control" name="languageId">
+						<% _.each(languages, function(lang) { %>
+							<option value="<%- lang.id %>"><%- lang.label %></option>
+						<% }) %>
 					</select>
 				</div>
 				<div class="form-group">
@@ -389,11 +383,11 @@
 				<div class="form-group">
 					<label class="control-label col-md-2" for="inpCheckerLanguage">Checker</label>
 					<div class="col-md-4">
-						<select name="checker[language]" id="inpCheckerLanguage" class="form-control">
+						<select name="checker[languageId]" id="inpCheckerLanguage" class="form-control">
 							<option value=""></option>
-							<option value="c"<%- checker && checker.language == 'c' ? ' selected' : '' %>>C</option>
-							<option value="cpp"<%- checker && checker.language == 'cpp' ? ' selected' : '' %>>C++</option>
-							<option value="java"<%- checker && checker.language == 'java' ? ' selected' : '' %>>Java</option>
+							<% _.each(Language.all, function(lang) { %>
+							<option value="<%- lang.id %>"<%- checker && checker.languageId == lang.id ? ' selected' : '' %>><%- lang.label %></option>
+							<% }) %>
 						</select>
 						<div class="popover">
 							<p>Checker for the problem</p>
@@ -403,14 +397,14 @@
 				<div class="form-group">
 					<label class="control-label col-md-2" for="inpCheckerSource">&nbsp;</label>
 					<div class="col-md-4">
-						<% if(checker && checker.sourceKey) { %>
-						<input type="text" id="inpCheckerSource" class="form-control" value="[Attached]" readonly>
-						<input type="hidden" name="checker[sourceKey]" value="<%- checker.sourceKey %>">
+						<% if(checker && checker.source.key) { %>
+						<input type="text" id="inpCheckerSource" class="form-control" value="<%- checker.source.name %>" readonly>
+						<input type="hidden" name="checker[source][key]" value="<%- checker.source.key %>">
 						<% } else { %>
 						<input type="file" id="inpCheckerSource" class="form-control" name="checker[source]">
 						<% } %>
 					</div>
-					<% if(checker && checker.sourceKey) { %>
+					<% if(checker && checker.source.key) { %>
 						<div class="col-md-2">
 							<button type="button" class="btn btn-danger btn-reset-field-file"><span class="fa fa-times"></span></button>
 						</div>
@@ -452,10 +446,10 @@
 				<div class="form-group">
 					<label class="control-label col-md-2" for="inpLanguages">Languages</label>
 					<div class="col-md-4">
-						<select name="languages" id="inpLanguages" class="form-control" multiple>
-							<option value="c"<%- _.contains(languages, 'c') ? ' selected' : '' %>>C</option>
-							<option value="cpp"<%- _.contains(languages, 'cpp') ? ' selected' : '' %>>C++</option>
-							<option value="java"<%- _.contains(languages, 'java') ? ' selected' : '' %>>Java</option>
+						<select name="languageIds" id="inpLanguages" class="form-control" multiple>
+							<% _.each(Language.all, function(lang) { %>
+							<option value="<%- lang.id %>"<%- _.contains(languageIds, lang.id) ? ' selected' : '' %>><%- lang.label %></option>
+							<% }) %>
 						</select>
 						<div class="popover">
 							<p>Languages for the problem</p>
@@ -471,9 +465,9 @@
 							<div class="form-group">
 								<label class="control-label col-md-2" for="inpDatasetIn">Tests</label>
 								<div class="col-md-4">
-									<% if(test.inputKey) { %>
-										<input type="text" id="inpDatasetIn" class="form-control" value="[Attached]" readonly>
-										<input type="hidden" name="tests[][inputKey]" value="<%- test.inputKey %>">
+									<% if(test.input && test.input.key) { %>
+										<input type="text" id="inpDatasetIn" class="form-control" value="<%- test.input.name %>" readonly>
+										<input type="hidden" name="tests[][input][key]" value="<%- test.input.key %>">
 									<% } else { %>
 										<input type="file" id="inpDatasetIn" class="form-control" name="tests[][input]">
 									<% } %>
@@ -485,9 +479,9 @@
 							<div class="form-group">
 								<label class="control-label col-md-2" for="inpDatasetAns">&nbsp;</label>
 								<div class="col-md-4">
-									<% if(test.answerKey) { %>
-										<input type="text" id="inpDatasetIn" class="form-control" value="[Attached]" readonly>
-										<input type="hidden" name="tests[][answerKey]" value="<%- test.answerKey %>">
+									<% if(test.answer && test.answer.key) { %>
+										<input type="text" id="inpDatasetIn" class="form-control" value="<%- test.answer.name %>" readonly>
+										<input type="hidden" name="tests[][answer][key]" value="<%- test.answer.key %>">
 									<% } else { %>
 										<input type="file" id="inpDatasetAns" class="form-control" name="tests[][answer]">
 									<% } %>
@@ -876,9 +870,9 @@
 				<div class="form-group">
 					<select name="language" class="form-control">
 						<option value="">Any language</option>
-						<option value="c">C</option>
-						<option value="cpp">C++</option>
-						<option value="java">Java</option>
+						<% _.each(languages, function(lang) { %>
+						<option value="<%- lang.id %>"><%- lang.label %></option>
+						<% }) %>
 					</select>
 				</div>
 				<div class="form-group">
@@ -1344,7 +1338,14 @@
 			<%= message %>
 		</script>
 
-		<script type="text/template" id="tplSettings">
+		<script type="text/template" id="tplSettingsTabbar">
+			<ul class="nav nav-pills">
+				<li class="active"><a href="#">General</a></li>
+				<li><a href="#">Languages</a></li>
+			</ul>
+		</script>
+
+		<script type="text/template" id="tplSettingsGeneral">
 			<form class="form-horizontal">
 				<br>
 
@@ -1404,6 +1405,71 @@
 				<div class="form-group">
 					<div class="col-md-4 col-md-offset-2">
 						<button type="submit" class="btn btn-primary" data-loading-text="Applying..">Apply</button>
+					</div>
+				</div>
+			</form>
+		</script>
+
+		<script type="text/template" id="tplSettingsLanguages">
+			<div class="form-horizontal">
+				<br>
+
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLanguagePick">Languages</label>
+					<div class="col-md-4">
+						<select id="inpLanguagePick" class="form-control">
+							<% _.each(languages, function(lang) { %>
+							<option value="<%- lang.id %>"<%- picked && picked.id == lang.id ? ' selected' : '' %>><%- lang.label %></option>
+							<% }) %>
+							<option value="-1">New</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<hr style="margin: 32px 0;">
+		</script>
+
+		<script type="text/template" id="tplSettingsLanguagesInner">
+			<form class="form-horizontal">
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLanguageLabel">Label</label>
+					<div class="col-md-4">
+						<input type="text" name="label" id="inpLanguageLabel" class="form-control" value="<%- label %>" required>
+						<div class="popover">
+							<p>A label for the language</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLanguageStepBuild">Build</label>
+					<div class="col-md-4">
+						<textarea name="steps[build]" id="inpLanguageStepBuild" class="form-control"><%- steps.build %></textarea>
+						<div class="popover">
+							<p>Commands for the build step</p>
+							<p class="small">Leave empty to skip</p>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label col-md-2" for="inpLanguageStepRun">Run</label>
+					<div class="col-md-4">
+						<input type="text" name="steps[run]" id="inpLanguageStepRun" class="form-control" value="<%- steps.run %>" required>
+						<div class="popover">
+							<p>Command for the run step</p>
+						</div>
+					</div>
+				</div>
+
+				<br>
+
+				<div class="form-group">
+					<div class="col-md-4 col-md-offset-2">
+						<% if(create) { %>
+						<button type="submit" class="btn btn-primary" data-loading-text="Creating..">Create</button>
+						<% } else { %>
+						<button type="submit" class="btn btn-primary" data-loading-text="Updating..">Update</button>
+						<button type="button" class="btn btn-danger btn-delete pull-right" data-loading-text="Deleting.." data-confirm-text="Delete language '<%- label %>'?">Delete</button>
+						<% } %>
 					</div>
 				</div>
 			</form>

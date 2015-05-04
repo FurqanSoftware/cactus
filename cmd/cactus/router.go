@@ -215,6 +215,27 @@ func init() {
 
 	r.NewRoute().
 		Methods("GET").
+		Path("/api/languages").
+		Handler(handleIdentity(http.HandlerFunc(api.ServeLanguageList)))
+	r.NewRoute().
+		Methods("POST").
+		Path("/api/languages").
+		Handler(handleIdentity(http.HandlerFunc(api.CreateLanguage)))
+	r.NewRoute().
+		Methods("GET").
+		Path("/api/languages/{id}").
+		Handler(handleIdentity(http.HandlerFunc(api.ServeLanguage)))
+	r.NewRoute().
+		Methods("PUT").
+		Path("/api/languages/{id}").
+		Handler(handleIdentity(http.HandlerFunc(api.UpdateLanguage)))
+	r.NewRoute().
+		Methods("DELETE").
+		Path("/api/languages/{id}").
+		Handler(handleIdentity(http.HandlerFunc(api.DeleteLanguage)))
+
+	r.NewRoute().
+		Methods("GET").
 		Path("/api/activities").
 		Handler(handleIdentity(http.HandlerFunc(api.ServeActivityList)))
 

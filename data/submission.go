@@ -23,10 +23,13 @@ const (
 type Submission struct {
 	Id int64 `json:"id"`
 
-	AuthorId  int64  `json:"authorId"`
-	ProblemId int64  `json:"problemId"`
-	Language  string `json:"language"`
-	SourceKey string `json:"sourceKey,omitempty"`
+	AuthorId   int64 `json:"authorId"`
+	ProblemId  int64 `json:"problemId"`
+	LanguageId int64 `json:"languageId"`
+	Source     struct {
+		Key  string `json:"key"`
+		Name string `json:"name"`
+	} `json:"source"`
 
 	Manual  bool    `json:"manual"`
 	Verdict Verdict `json:"verdict"`
@@ -119,6 +122,10 @@ func GetSubmission(id int64) (*Submission, error) {
 
 func (s *Submission) Problem() (*Problem, error) {
 	return GetProblem(s.ProblemId)
+}
+
+func (s *Submission) Language() (*Language, error) {
+	return GetLanguage(s.LanguageId)
 }
 
 func (s *Submission) Apply(exec *Execution) {
