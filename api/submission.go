@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strconv"
 	"strings"
 
@@ -168,7 +169,7 @@ func ServeSubmissionSource(w http.ResponseWriter, r *http.Request) {
 		prob, err := data.GetProblem(subm.ProblemId)
 		catch(err)
 
-		w.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%d-%s-%s.%s"`, subm.Id, acc.Handle, strings.ToLower(prob.Char), subm.Language))
+		w.Header().Add("Content-Disposition", fmt.Sprintf(`attachment; filename="%d-%s-%s-source%s"`, subm.Id, acc.Handle, strings.ToLower(prob.Char), path.Ext(subm.Source.Name)))
 	}
 
 	blob, err := data.Blobs.Get(subm.Source.Key)

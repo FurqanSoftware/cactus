@@ -2599,6 +2599,12 @@
 	var SubmissionSource = View.extend({
 		template: _.template($('#tplSubmissionSource').html()),
 
+		events: {
+			'click .btn-download': function(event) {
+				open(this.model.url()+'/source?download=yes', '_blank')
+			}
+		},
+
 		initialize: function() {
 			this.listenTo(this.model, 'change', _.debounce(_.bind(this.render, this), 125))
 			this.listenTo(Language.all, 'add remove sync sort', _.debounce(_.bind(this.render, this), 125))
