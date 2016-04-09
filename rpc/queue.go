@@ -11,6 +11,11 @@ import (
 
 type Queue struct{}
 
+func (q *Queue) Push(exec *data.Execution, reply *interface{}) error {
+	err := belt.Queue.Push(exec)
+	return err
+}
+
 func (q *Queue) Pop(args int, reply *data.Execution) error {
 	exec, err := belt.Queue.Pop(false)
 	if err != nil {

@@ -28,8 +28,11 @@ func NewRemoteQueue(addr string) (*RemoteQueue, error) {
 	}, nil
 }
 
-func (q *RemoteQueue) Push(*data.Execution) error {
-	panic("unimplemented")
+func (q *RemoteQueue) Push(exec *data.Execution) error {
+	var abc interface{}
+	err := q.c.Call("Queue.Push", exec, abc)
+
+	return err
 }
 
 func (q *RemoteQueue) Pop(wait bool) (*Execution, error) {
