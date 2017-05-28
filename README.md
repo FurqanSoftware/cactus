@@ -1,5 +1,7 @@
 # Cactus
 
-[![Build Status](https://drone.io/github.com/hjr265/cactus/status.png)](https://drone.io/github.com/hjr265/cactus/latest)
+[![Code Triagers Badge](https://www.codetriage.com/furqansoftware/cactus/badges/users.svg)](https://www.codetriage.com/furqansoftware/cactus)
 
 Cactus is a programming contest hosting application.
+
+
