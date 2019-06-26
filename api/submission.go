@@ -13,9 +13,9 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 
-	"github.com/hjr265/cactus/belt"
-	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
+	"github.com/FurqanSoftware/cactus/belt"
+	"github.com/FurqanSoftware/cactus/data"
+	"github.com/FurqanSoftware/cactus/hub"
 )
 
 func ServeSubmissionList(w http.ResponseWriter, r *http.Request) {

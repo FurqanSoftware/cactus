@@ -5,7 +5,7 @@ package data
 import (
 	"time"
 
-	"labix.org/v2/mgo/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 type Activity struct {

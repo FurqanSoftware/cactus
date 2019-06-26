@@ -19,7 +19,8 @@ cactus: $(GOFILES) $(RSCFILES)
 	zip -A $@
 
 ui/assets/css/screen.min.css: $(CSSFILES)
-	cat $^ | cleancss --s0 --s1 -o $@
+	# cat $^ | cleancss --s0 --s1 -o $@
+	cat $^ > $@
 
 ui/assets/js/cactus.min.js: $(JSFILES)
 	uglifyjs $^ -c -m --screw-ie8 -p 1 --source-map $@.map --source-map-include-sources --source-map-root / --source-map-url /assets/js/cactus.min.js.map > $@

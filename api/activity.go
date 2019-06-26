@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/context"
 
-	"github.com/hjr265/cactus/data"
+	"github.com/FurqanSoftware/cactus/data"
 )
 
 func ServeActivityList(w http.ResponseWriter, r *http.Request) {

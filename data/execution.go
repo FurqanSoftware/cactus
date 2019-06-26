@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"time"
 
-	"labix.org/v2/mgo/bson"
+	"github.com/globalsign/mgo/bson"
 )
 
 type Execution struct {

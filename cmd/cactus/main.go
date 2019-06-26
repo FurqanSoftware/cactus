@@ -13,10 +13,10 @@ import (
 	"github.com/hjr265/go-zrsc/zrsc"
 	"github.com/pelletier/go-toml"
 
-	"github.com/hjr265/cactus/belt"
+	"github.com/FurqanSoftware/cactus/belt"
 )
 
-var cfg *toml.TomlTree
+var cfg *toml.Tree
 
 func main() {
 	runtime.GOMAXPROCS((runtime.NumCPU() + 1) / 2)

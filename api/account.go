@@ -16,8 +16,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/mxk/go-sqlite/sqlite3"
 
-	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
+	"github.com/FurqanSoftware/cactus/data"
+	"github.com/FurqanSoftware/cactus/hub"
 )
 
 func ServeAccountList(w http.ResponseWriter, r *http.Request) {

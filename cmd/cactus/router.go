@@ -11,10 +11,10 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
-	"github.com/hjr265/cactus/api"
-	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
-	"github.com/hjr265/cactus/ui"
+	"github.com/FurqanSoftware/cactus/api"
+	"github.com/FurqanSoftware/cactus/data"
+	"github.com/FurqanSoftware/cactus/hub"
+	"github.com/FurqanSoftware/cactus/ui"
 )
 
 func handlePanic(h http.Handler) http.Handler {

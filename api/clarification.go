@@ -11,8 +11,8 @@ import (
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 
-	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
+	"github.com/FurqanSoftware/cactus/data"
+	"github.com/FurqanSoftware/cactus/hub"
 )
 
 func ServeClarificationList(w http.ResponseWriter, r *http.Request) {
