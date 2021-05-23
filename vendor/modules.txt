@@ -1,0 +1,39 @@
+# github.com/felixge/httpsnoop v1.0.1
+github.com/felixge/httpsnoop
+# github.com/gorilla/context v1.1.1
+## explicit
+github.com/gorilla/context
+# github.com/gorilla/handlers v1.5.1
+## explicit
+github.com/gorilla/handlers
+# github.com/gorilla/mux v1.8.0
+## explicit
+github.com/gorilla/mux
+# github.com/gorilla/securecookie v1.1.1
+github.com/gorilla/securecookie
+# github.com/gorilla/sessions v1.2.1
+## explicit
+github.com/gorilla/sessions
+# github.com/gorilla/websocket v1.4.2
+## explicit
+github.com/gorilla/websocket
+# github.com/hjr265/bloo v0.0.0-20141103193725-3fd271936319
+## explicit
+github.com/hjr265/bloo
+# github.com/hjr265/go-zrsc v0.0.0-20140522072337-790a85bb06d2
+## explicit
+github.com/hjr265/go-zrsc/zrsc
+# github.com/hjr265/jail.go v0.0.0-20140719091347-c85192638098
+## explicit
+github.com/hjr265/jail.go/jail
+# github.com/mattn/go-sqlite3 v1.14.7
+## explicit
+github.com/mattn/go-sqlite3
+# github.com/mxk/go-sqlite v0.0.0-20140611214908-167da9432e1f
+## explicit
+# github.com/pelletier/go-toml v1.9.1
+## explicit
+github.com/pelletier/go-toml
+# labix.org/v2/mgo v0.0.0-20140701140051-000000000287
+## explicit
+labix.org/v2/mgo/bson

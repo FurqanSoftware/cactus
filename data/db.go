@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"database/sql"
+
 	"github.com/hjr265/go-zrsc/zrsc"
-	_ "github.com/mxk/go-sqlite/sqlite3"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var db *sql.DB

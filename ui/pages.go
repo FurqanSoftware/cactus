@@ -10,7 +10,7 @@ import (
 
 	"github.com/hjr265/go-zrsc/zrsc"
 
-	"github.com/hjr265/cactus/data"
+	"github.com/FurqanSoftware/cactus/data"
 )
 
 var tplIndex = template.New("index.min.html")

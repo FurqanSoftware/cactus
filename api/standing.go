@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/hjr265/cactus/data"
+	"github.com/FurqanSoftware/cactus/data"
 )
 
 func ServeStandingList(w http.ResponseWriter, r *http.Request) {

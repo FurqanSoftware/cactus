@@ -9,7 +9,7 @@ import (
 
 	"labix.org/v2/mgo/bson"
 
-	"github.com/hjr265/cactus/hub"
+	"github.com/FurqanSoftware/cactus/hub"
 )
 
 type Standing struct {

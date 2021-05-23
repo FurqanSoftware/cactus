@@ -5,7 +5,7 @@ package api
 import (
 	"github.com/gorilla/sessions"
 
-	"github.com/hjr265/cactus/data"
+	"github.com/FurqanSoftware/cactus/data"
 )
 
 var Store sessions.Store

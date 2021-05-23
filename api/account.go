@@ -14,10 +14,10 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/mxk/go-sqlite/sqlite3"
+	"github.com/mattn/go-sqlite3"
 
-	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
+	"github.com/FurqanSoftware/cactus/data"
+	"github.com/FurqanSoftware/cactus/hub"
 )
 
 func ServeAccountList(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 	acc.Level = body.Level
 	acc.Name = body.Name
 	err = acc.Put()
-	if err, ok := err.(*sqlite3.Error); ok && err.Code() == sqlite3.CONSTRAINT_UNIQUE {
+	if err, ok := err.(*sqlite3.Error); ok && err.ExtendedCode&sqlite3.ErrConstraintUnique > 0 {
 		http.Error(w, "", http.StatusConflict)
 		return
 	}
@@ -137,7 +137,7 @@ func ImportAccounts(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = acc.Put()
-		if err, ok := err.(*sqlite3.Error); ok && err.Code() == sqlite3.CONSTRAINT_UNIQUE {
+		if err, ok := err.(*sqlite3.Error); ok && err.ExtendedCode&sqlite3.ErrConstraintUnique > 0 {
 			continue
 		}
 		catch(err)

@@ -14,8 +14,8 @@ import (
 
 	"github.com/hjr265/jail.go/jail"
 
-	"github.com/hjr265/cactus/data"
-	"github.com/hjr265/cactus/hub"
+	"github.com/FurqanSoftware/cactus/data"
+	"github.com/FurqanSoftware/cactus/hub"
 )
 
 var chNext = make(chan *data.Execution, 4096)
