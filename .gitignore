@@ -23,3 +23,11 @@ _testmain.go
 *.test
 *.prof
 
+/node_modules
+/ui/assets/css/screen.min.css
+/ui/assets/js/cactus.min.js
+/ui/index.min.html
+
+/cactus
+/cactus.db*
+/config.tml
