@@ -3,10 +3,10 @@
 package ui
 
 import (
-	"html/template"
 	"io/ioutil"
 	"mime"
 	"net/http"
+	"text/template"
 
 	"github.com/hjr265/go-zrsc/zrsc"
 

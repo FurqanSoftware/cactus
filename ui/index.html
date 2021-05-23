@@ -1447,7 +1447,10 @@
 		</script>
 
 		<script type="text/javascript">
-			var consts = {{.consts}}
+			var consts = {
+				{{range $k, $v := .consts}}"{{$k}}": {{$v}},
+				{{end}}
+			}
 		</script>
 		<script src="/assets/js/cactus.min.js"></script>
 	</body>
