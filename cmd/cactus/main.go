@@ -11,7 +11,9 @@ import (
 	"os/signal"
 	"runtime"
 
+	"github.com/FurqanSoftware/cactus/api"
 	"github.com/FurqanSoftware/cactus/belt"
+	"github.com/FurqanSoftware/cactus/data"
 	"github.com/FurqanSoftware/cactus/sandbox"
 )
 
@@ -52,6 +54,21 @@ func main() {
 	if cfg.Core.Addr == "" {
 		log.Fatal("Missing core.addr in config.toml")
 	}
+
+	dbPath := cfg.Data.DB
+	if dbPath == "" {
+		dbPath = "cactus.db"
+	}
+	blobsPath := cfg.Data.Blobs
+	if blobsPath == "" {
+		blobsPath = "cactus.bs"
+	}
+	log.Printf("Opening database %s and blob store %s", dbPath, blobsPath)
+	err = data.Open(dbPath, blobsPath)
+	catch(err)
+
+	err = api.InitStore()
+	catch(err)
 
 	go func() {
 		log.Printf("Listening on %s", cfg.Core.Addr)

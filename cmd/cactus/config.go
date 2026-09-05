@@ -11,6 +11,10 @@ type Config struct {
 	Core struct {
 		Addr string `toml:"addr"`
 	} `toml:"core"`
+	Data struct {
+		DB    string `toml:"db"`
+		Blobs string `toml:"blobs"`
+	} `toml:"data"`
 	Belt struct {
 		Size int `toml:"size"`
 	} `toml:"belt"`

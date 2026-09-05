@@ -29,8 +29,11 @@ func currentAccount(r *http.Request) *data.Account {
 
 var Store sessions.Store
 
-func init() {
+func InitStore() error {
 	cnt, err := data.GetContest()
-	catch(err)
+	if err != nil {
+		return err
+	}
 	Store = sessions.NewCookieStore(cnt.Salt, cnt.Salt)
+	return nil
 }

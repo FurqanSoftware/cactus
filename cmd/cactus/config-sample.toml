@@ -1,6 +1,10 @@
 [core]
 addr = ":5050"
 
+[data]
+# db = "cactus.db"          # Path to the SQLite database file
+# blobs = "cactus.bs"       # Path to the blob store directory
+
 [belt]
 size = 2
 

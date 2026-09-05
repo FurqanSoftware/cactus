@@ -4,6 +4,7 @@ package data
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -12,31 +13,50 @@ import (
 
 var db *sql.DB
 
-func init() {
-	db = func() *sql.DB {
-		db, err := sql.Open("sqlite3", "cactus.db")
-		catch(err)
-		return db
-	}()
+// Open opens the database at dbPath and the blob store at blobsPath, applies the
+// schema, and seeds the default contest and admin account. It must be called
+// before anything else in this package is used.
+func Open(dbPath, blobsPath string) error {
+	var err error
+	db, err = sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return err
+	}
 
 	v := 0
-	err := db.QueryRow("PRAGMA user_version").
+	err = db.QueryRow("PRAGMA user_version").
 		Scan(&v)
+	if err != nil {
+		return err
+	}
 	if v > 0 && v < 1 {
-		log.Fatal("incompatible database; exiting")
+		return fmt.Errorf("incompatible database %s", dbPath)
 	}
 	if v == 0 {
 		_, err = db.Exec("PRAGMA user_version = 1")
-		catch(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	b, err := dbInitSQL.ReadFile("db-init.sql")
-	catch(err)
+	if err != nil {
+		return err
+	}
 	_, err = db.Exec(string(b))
-	catch(err)
+	if err != nil {
+		return err
+	}
+
+	err = openBlobs(blobsPath)
+	if err != nil {
+		return err
+	}
 
 	cnt, err := GetContest()
-	catch(err)
+	if err != nil {
+		return err
+	}
 	if !cnt.Ready {
 		cnt.Title = "Untitled"
 		cnt.Starts = time.Now().Add(1 * time.Hour)
@@ -44,11 +64,15 @@ func init() {
 		cnt.Ready = true
 		cnt.Created = time.Now()
 		err = cnt.Put()
-		catch(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	acc, err := GetAccount(1)
-	catch(err)
+	if err != nil {
+		return err
+	}
 	if acc == nil {
 		acc = &Account{
 			Handle: "cactus",
@@ -56,9 +80,15 @@ func init() {
 			Name:   "Cactus",
 		}
 		err = acc.SetPassword("cactus")
-		catch(err)
+		if err != nil {
+			return err
+		}
 		err = acc.Put()
-		catch(err)
+		if err != nil {
+			return err
+		}
 		log.Print("Created default admin account (handle: cactus, password: cactus)")
 	}
+
+	return nil
 }
