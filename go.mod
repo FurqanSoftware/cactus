@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/gorilla/handlers v1.5.2
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/gorilla/websocket v1.5.3
 	github.com/hjr265/bloo v0.0.0-20141103193725-3fd271936319
