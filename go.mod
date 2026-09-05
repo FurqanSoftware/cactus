@@ -1,6 +1,6 @@
 module github.com/FurqanSoftware/cactus
 
-go 1.16
+go 1.24
 
 require (
 	github.com/gorilla/handlers v1.5.1
@@ -12,5 +12,10 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/pelletier/go-toml v1.9.1
 	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
+)
+
+require (
+	github.com/felixge/httpsnoop v1.0.1 // indirect
+	github.com/gorilla/securecookie v1.1.1 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
