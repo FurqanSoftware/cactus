@@ -82,7 +82,7 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 	acc.Level = body.Level
 	acc.Name = body.Name
 	err = acc.Put()
-	if err, ok := err.(*sqlite3.Error); ok && err.ExtendedCode&sqlite3.ErrConstraintUnique > 0 {
+	if err, ok := err.(sqlite3.Error); ok && err.ExtendedCode == sqlite3.ErrConstraintUnique {
 		http.Error(w, "", http.StatusConflict)
 		return
 	}
@@ -170,7 +170,7 @@ func ImportAccounts(w http.ResponseWriter, r *http.Request) {
 		acc.Name = name
 
 		err = acc.Put()
-		if err, ok := err.(*sqlite3.Error); ok && err.ExtendedCode&sqlite3.ErrConstraintUnique > 0 {
+		if err, ok := err.(sqlite3.Error); ok && err.ExtendedCode == sqlite3.ErrConstraintUnique {
 			skip("handle is already taken")
 			continue
 		}
