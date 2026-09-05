@@ -25,7 +25,7 @@ github.com/hjr265/jail.go/jail
 # github.com/mattn/go-sqlite3 v1.14.50
 ## explicit; go 1.21
 github.com/mattn/go-sqlite3
-# github.com/pelletier/go-toml v1.9.1
+# github.com/pelletier/go-toml v1.9.5
 ## explicit; go 1.12
 github.com/pelletier/go-toml
 # labix.org/v2/mgo v0.0.0-20140701140051-000000000287
