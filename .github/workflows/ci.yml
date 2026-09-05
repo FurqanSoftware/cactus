@@ -15,8 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # github.com/mattn/go-sqlite3 is a cgo package.
-      CGO_ENABLED: "1"
+      CGO_ENABLED: "0"
 
     steps:
       - uses: actions/checkout@v7

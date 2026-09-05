@@ -8,6 +8,8 @@ tasks:
 
   build:
     deps: [minify-css, minify-js, minify-html]
+    env:
+      CGO_ENABLED: "0"
     vars:
       BUILD_TAG:
         sh: git describe --tags --always 2>/dev/null || echo "dev"

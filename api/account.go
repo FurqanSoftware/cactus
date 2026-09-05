@@ -13,7 +13,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/mattn/go-sqlite3"
+	"modernc.org/sqlite"
+	sqlite3 "modernc.org/sqlite/lib"
 
 	"github.com/FurqanSoftware/cactus/data"
 	"github.com/FurqanSoftware/cactus/hub"
@@ -82,7 +83,7 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 	acc.Level = body.Level
 	acc.Name = body.Name
 	err = acc.Put()
-	if err, ok := err.(sqlite3.Error); ok && err.ExtendedCode == sqlite3.ErrConstraintUnique {
+	if err, ok := err.(*sqlite.Error); ok && err.Code() == sqlite3.SQLITE_CONSTRAINT_UNIQUE {
 		http.Error(w, "", http.StatusConflict)
 		return
 	}
@@ -170,7 +171,7 @@ func ImportAccounts(w http.ResponseWriter, r *http.Request) {
 		acc.Name = name
 
 		err = acc.Put()
-		if err, ok := err.(sqlite3.Error); ok && err.ExtendedCode == sqlite3.ErrConstraintUnique {
+		if err, ok := err.(*sqlite.Error); ok && err.Code() == sqlite3.SQLITE_CONSTRAINT_UNIQUE {
 			skip("handle is already taken")
 			continue
 		}
