@@ -3,13 +3,14 @@
 // Use of this source code is governed by an MIT-style
 // license that can be found in the LICENSE file.
 
+//go:build !sqlite_omit_load_extension
 // +build !sqlite_omit_load_extension
 
 package sqlite3
 
 /*
 #ifndef USE_LIBSQLITE3
-#include <sqlite3-binding.h>
+#include "sqlite3-binding.h"
 #else
 #include <sqlite3.h>
 #endif
@@ -73,11 +74,11 @@ func (c *SQLiteConn) loadExtension(lib string, entry *string) error {
 	}
 
 	var errMsg *C.char
-	defer C.sqlite3_free(unsafe.Pointer(errMsg))
-
 	rv := C.sqlite3_load_extension(c.db, clib, centry, &errMsg)
 	if rv != C.SQLITE_OK {
-		return errors.New(C.GoString(errMsg))
+		err := errors.New(C.GoString(errMsg))
+		C.sqlite3_free(unsafe.Pointer(errMsg))
+		return err
 	}
 
 	return nil
