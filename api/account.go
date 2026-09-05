@@ -97,6 +97,11 @@ func CreateAccount(w http.ResponseWriter, r *http.Request) {
 	hub.Send([]interface{}{"SYNC", "activities"})
 }
 
+type accountImportSkip struct {
+	Line   int    `json:"line"`
+	Reason string `json:"reason"`
+}
+
 func ImportAccounts(w http.ResponseWriter, r *http.Request) {
 	me := currentAccount(r)
 	if me == nil || me.Level != data.Administrator {
@@ -105,47 +110,87 @@ func ImportAccounts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	body := csv.NewReader(r.Body)
+	body.FieldsPerRecord = -1
+
+	imported := 0
+	skipped := []accountImportSkip{}
 	for {
 		cols, err := body.Read()
 		if err == io.EOF {
 			break
 		}
-		catch(err)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s (%d accounts imported before this line)", err, imported), http.StatusBadRequest)
+			return
+		}
 
-		acc := &data.Account{}
-		acc.Handle = cols[0]
-		err = acc.SetPassword(cols[1])
-		catch(err)
+		line := 0
+		if len(cols) > 0 {
+			line, _ = body.FieldPos(0)
+		}
+		skip := func(reason string) {
+			skipped = append(skipped, accountImportSkip{Line: line, Reason: reason})
+		}
+
+		if len(cols) < 4 {
+			skip("expected the fields handle, password, level and name")
+			continue
+		}
+
+		handle, password, name := cols[0], cols[1], cols[3]
 		col2, err := strconv.ParseInt(cols[2], 10, 32)
-		catch(err)
-		acc.Level = data.Level(col2)
-		acc.Name = cols[3]
+		level := data.Level(col2)
 
 		switch {
-		case len(acc.Handle) < 4:
+		case len(handle) < 4:
+			skip("handle is shorter than 4 characters")
 			continue
 
-		case len(acc.Password) < 4:
+		case len(password) < 4:
+			skip("password is shorter than 4 characters")
 			continue
 
-		case acc.Level != data.Participant && acc.Level != data.Judge && acc.Level != data.Administrator:
+		case err != nil:
+			skip("level is not a number")
 			continue
 
-		case acc.Name == "":
-			acc.Name = acc.Handle
+		case level != data.Participant && level != data.Judge && level != data.Administrator:
+			skip("level is not one of 1, 2 or 3")
+			continue
+
+		case name == "":
+			name = handle
 		}
+
+		acc := &data.Account{}
+		acc.Handle = handle
+		err = acc.SetPassword(password)
+		catch(err)
+		acc.Level = level
+		acc.Name = name
 
 		err = acc.Put()
 		if err, ok := err.(*sqlite3.Error); ok && err.ExtendedCode&sqlite3.ErrConstraintUnique > 0 {
+			skip("handle is already taken")
 			continue
 		}
 		catch(err)
+		imported++
 
 		err = data.NewActivity(me, fmt.Sprintf("created account %d", acc.Id)).Put()
 		catch(err)
 		hub.Send([]interface{}{"SYNC", "activities"})
 	}
 	hub.Send([]interface{}{"SYNC", "accounts"})
+
+	err := json.NewEncoder(w).Encode(struct {
+		Imported int                 `json:"imported"`
+		Skipped  []accountImportSkip `json:"skipped"`
+	}{
+		Imported: imported,
+		Skipped:  skipped,
+	})
+	catch(err)
 }
 
 func ServeAccountMe(w http.ResponseWriter, r *http.Request) {
