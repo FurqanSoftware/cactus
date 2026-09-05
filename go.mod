@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/hjr265/bloo v0.0.0-20141103193725-3fd271936319
 	github.com/hjr265/jail.go v0.0.0-20140719091347-c85192638098
-	github.com/mattn/go-sqlite3 v1.14.7
+	github.com/mattn/go-sqlite3 v1.14.50
 	github.com/pelletier/go-toml v1.9.1
 	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
 )
