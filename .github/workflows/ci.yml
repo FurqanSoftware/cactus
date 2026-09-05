@@ -1,0 +1,63 @@
+# Copyright 2014 The Cactus Authors. All rights reserved.
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      # github.com/mattn/go-sqlite3 is a cgo package.
+      CGO_ENABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: npm ci
+
+      # ui/embed.go embeds ui/index.min.html, ui/assets/css/screen.min.css and
+      # ui/assets/js/cactus.min.js, none of which are checked in. Nothing in Go
+      # compiles until Task has generated them, so this comes before vet and test.
+      - name: Build
+        run: task build
+
+      - name: Check formatting
+        run: |
+          files="$(find . -name '*.go' -not -path './vendor/*' -exec gofmt -l {} +)"
+          if [ -n "$files" ]; then
+            echo "::error::gofmt reported unformatted files"
+            echo "$files"
+            exit 1
+          fi
+
+      # -mod=vendor is explicit rather than implied: labix.org/v2/mgo is imported
+      # throughout data/ and its host no longer works as a VCS source, so vendor/ is
+      # what keeps this build independent of the module proxy's cache. For the same
+      # reason, do not add a `go mod tidy` check here.
+      - name: Vet
+        run: go vet -mod=vendor ./...
+
+      - name: Test
+        run: go test -mod=vendor ./...

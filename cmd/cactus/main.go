@@ -88,7 +88,7 @@ func main() {
 		go belt.Loop()
 	}
 
-	sigCh := make(chan os.Signal)
+	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 
 	log.Printf("Received %s; exiting", <-sigCh)
