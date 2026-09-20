@@ -11,7 +11,7 @@ require (
 	github.com/hjr265/jail.go v0.0.0-20140719091347-c85192638098
 	github.com/pelletier/go-toml v1.9.5
 	labix.org/v2/mgo v0.0.0-20140701140051-000000000287
-	modernc.org/sqlite v1.58.0
+	modernc.org/sqlite v1.59.0
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
-	modernc.org/libc v1.75.6 // indirect
+	modernc.org/libc v1.75.7 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
 )
